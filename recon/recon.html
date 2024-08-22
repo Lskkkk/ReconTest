@@ -197,7 +197,8 @@
                             buyEle.val(),
                             saleEle.val(),
                             startMoneyEle.val(),
-                            fieldMoneyEle.val()
+                            fieldMoneyEle.val(),
+                            dayEle.val()
                         ].join(',');
                         console.log('addStrategy:', f.name, f.bestStrategy);
                     }
@@ -212,7 +213,8 @@
                     buyEle: str[1],
                     saleEle: str[2],
                     startMoneyEle: str[3],
-                    fieldMoneyEle: str[4]
+                    fieldMoneyEle: str[4],
+                    dayEle: str[5]
                 });
             });
             $('#btn-runAllStrategy').click(() => {
@@ -225,9 +227,11 @@
                             fetchOne(f.id, true, (savedValues) => console.log(`fetch ${f.id} succeed: ${savedValues.length}`));
                             return;
                         }
-                        const str = f.bestStrategy.split(',').map(s => Number(s));
+                        const str = f.bestStrategy.split(',');
                         values = fetchOne(f.id);
-                        const [profit, , maxLost, winRate, progress] = recon(values, false, f.id, str[0], str[1], str[2], str[3], str[4], false);
+                        const isMonth = str[5] == 'month';
+                        values = isMonth ? getMonthValues(values) : values;
+                        const [profit, , maxLost, winRate, progress] = recon(values, false, f.id, Number(str[0]), Number(str[1]), Number(str[2]), Number(str[3]), Number(str[4]), isMonth);
                         console.log(f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost, 'winRate:', winRate, 'progress:', progress);
                     }
                 });
