@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./jquery.js"></script>
+    <title>Test</title>
+</head>
+
+<body>
+    <div id="main" style="opacity: 0.3;">
+        <select id="fund-selector"></select>
+        <button id="btn-reload">reload</button>
+        <br /><span>------------------------------------</span><br />
+        <select id="start-year-selector"></select>
+        <select id="day-selector"></select>
+        <select id="buy-rate-selector"></select>
+        <select id="sale-rate-selector"></select>
+        <select id="start-money-selector"></select>
+        <select id="field-money-selector"></select>
+        <select id="win-rate-selector"></select>
+        <select id="win-years-selector"></select>
+        <br /><span>------------------------------------</span><br />
+        <button id="btn-recon">recon</button>
+        <button id="btn-search">search</button>
+        <button id="btn-reset">reset</button><br /><br />
+        <button id="btn-addStrategy">addStrategy</button>
+        <button id="btn-readStrategy">readStrategy</button>
+        <button id="btn-runAllStrategy">runAllStrategy</button>
+    </div>
+
+    <script>
+        let funds = [
+            { name: 'szzs', id: '470007', bestStrategy: '' },
+            { name: 'hldb', id: '005562' },
+            { name: 'dpqh', id: '007937' },
+            { name: '300', id: '110020' },
+            { name: 'zzhl', id: '090010' },
+            { name: 'huangj', id: '000217' },
+            { name: 'baijiu', id: '161725' }
+        ];
+        const nowYear = new Date().getFullYear();
+
+        const readFunds = () => {
+            let storeFunds = localStorage.getItem('funds');
+            if (!storeFunds) return;
+            JSON.parse(storeFunds).forEach(sf => {
+                funds.forEach(f => {
+                    if (f.id == sf.id) {
+                        f.bestStrategy = sf.bestStrategy;
+                    }
+                });
+            });
+            return funds;
+        };
+        const saveFunds = () => {
+            localStorage.setItem('funds', JSON.stringify(funds));
+        };
+
+        $(document).ready(function () {
+            const fundEle = $('#fund-selector');
+            const yearEle = $('#start-year-selector');
+            const buyEle = $('#buy-rate-selector');
+            const saleEle = $('#sale-rate-selector');
+            const startMoneyEle = $('#start-money-selector');
+            const fieldMoneyEle = $('#field-money-selector');
+            const dayEle = $('#day-selector');
+            const winEle = $('#win-rate-selector');
+            const winYearsEle = $('#win-years-selector');
+
+            funds.forEach(fund => {
+                fundEle.append(`<option value="${fund.id}">${fund.name}</option>`);
+            });
+            for (let i = 2010; i <= nowYear; i++) {
+                yearEle.append(`<option value="${i}">${i}</option>`);
+                winYearsEle.append(`<option value="${nowYear - i + 1}">${nowYear - i + 1}</option>`);
+            }
+            for (let i = 0.7; i < 1; i += 0.02) {
+                buyEle.append(`<option value="${i}">${i.toFixed(2)}</option>`);
+            }
+            for (let i = 1.05; i < 2; i += 0.02) {
+                saleEle.append(`<option value="${i}">${i.toFixed(2)}</option>`);
+            }
+            for (let i = 100000; i >= 10000; i -= 10000) {
+                startMoneyEle.append(`<option value="${i}">${i}</option>`);
+            }
+            for (let i = 500; i <= 50000; i += i < 10000 ? (i < 5000 ? 500 : 1000) : 5000) {
+                fieldMoneyEle.append(`<option value="${i}">${i}</option>`);
+            }
+            dayEle.append(`<option value="day">day</option>`);
+            dayEle.append(`<option value="month">month</option>`);
+            for (let i = 0.95; i >= 0.2; i -= 0.05) {
+                winEle.append(`<option value="${i.toFixed(2)}">${i.toFixed(2)}</option>`);
+            }
+
+            let lastOptions;
+            const restoreOptions = (optionData) => {
+                optionData.fundEle && fundEle.val(optionData.fundEle);
+                optionData.yearEle && yearEle.val(optionData.yearEle);
+                optionData.buyEle && buyEle.val(optionData.buyEle);
+                optionData.saleEle && saleEle.val(optionData.saleEle);
+                optionData.startMoneyEle && startMoneyEle.val(optionData.startMoneyEle);
+                optionData.fieldMoneyEle && fieldMoneyEle.val(optionData.fieldMoneyEle);
+                optionData.dayEle && dayEle.val(optionData.dayEle);
+                optionData.winEle && winEle.val(optionData.winEle);
+                optionData.winYearsEle && winYearsEle.val(optionData.winYearsEle);
+            };
+            const saveLastOptions = () => {
+                lastOptions = {
+                    fundEle: fundEle.val(),
+                    yearEle: Number(yearEle.val()),
+                    buyEle: Number(buyEle.val()),
+                    saleEle: Number(saleEle.val()),
+                    startMoneyEle: Number(startMoneyEle.val()),
+                    fieldMoneyEle: Number(fieldMoneyEle.val()),
+                    dayEle: dayEle.val(),
+                    winEle: Number(winEle.val()),
+                    winYearsEle: winYearsEle.val()
+                };
+                console.log(JSON.stringify(lastOptions));
+                localStorage.setItem('lastOptions', JSON.stringify(lastOptions));
+            };
+
+            readFunds();
+            lastOptions = localStorage.getItem('lastOptions');
+            if (lastOptions) {
+                lastOptions = JSON.parse(lastOptions);
+                restoreOptions(lastOptions);
+            }
+            $('#btn-reload').click(() => {
+                localStorage.removeItem(fundEle.val());
+                fetchOne(fundEle.val(), true, () => console.log(`fetch ${fundEle.val()} succeed!`));
+            });
+            $('#btn-recon').click(() => {
+                let values = fetchOne(fundEle.val());
+                saveLastOptions();
+                console.clear();
+                values = lastOptions.dayEle == 'month' ? getMonthValues(values) : values;
+                recon(values, true, lastOptions.fundEle, lastOptions.yearEle, lastOptions.buyEle, lastOptions.saleEle, lastOptions.startMoneyEle, lastOptions.fieldMoneyEle, lastOptions.dayEle == 'month');
+            });
+            $('#btn-search').click(() => {
+                $('#btn-search').text('searching...');
+                let values = fetchOne(fundEle.val());
+                values = lastOptions.dayEle == 'month' ? getMonthValues(values) : values;
+                setTimeout(() => {
+                    let results = [], currentWinRate = winEle.val();
+                    while (results.length == 0) {
+                        console.clear();
+                        saveLastOptions();
+                        results = searching(values, lastOptions.fundEle, lastOptions.yearEle, lastOptions.winEle, lastOptions.buyEle, lastOptions.saleEle, lastOptions.startMoneyEle, lastOptions.fieldMoneyEle, lastOptions.dayEle == 'month', lastOptions.winYearsEle);
+                        let currentIndex = 0;
+                        winEle.find('option').each((i, ele) => {
+                            if ($(ele).val() == currentWinRate) {
+                                currentIndex = i + 1;
+                            }
+                        });
+                        if (results.length == 0 && currentIndex < winEle.find('option').length) {
+                            currentWinRate = winEle.find(`option:nth-child(${currentIndex + 1})`).val();
+                            winEle.val(currentWinRate);
+                        } else {
+                            break;
+                        }
+                    }
+                    $('#btn-search').text('search');
+                }, 10);
+            });
+            $('#btn-reset').click(() => {
+                yearEle.find('option:first').prop('selected', true);
+                buyEle.find('option:first').prop('selected', true);
+                saleEle.find('option:first').prop('selected', true);
+                startMoneyEle.find('option:first').prop('selected', true);
+                fieldMoneyEle.find('option:first').prop('selected', true);
+                winEle.find('option:nth-child(4)').prop('selected', true);
+                let values = fetchOne(fundEle.val());
+                const startYear = Number(values[0].date.substring(0, 4));
+                yearEle.find('option').each((i, ele) => {
+                    if ($(ele).text() == String(startYear)) {
+                        $(ele).prop('selected', true);
+                    }
+                });
+                winYearsEle.find('option').each((i, ele) => {
+                    if ($(ele).text() == String(nowYear - startYear)) {
+                        $(ele).prop('selected', true);
+                    }
+                });
+            });
+            yearEle.change(() => {
+                const selectedOption = yearEle.find('option:selected');
+                winYearsEle.val(nowYear - Number(selectedOption.val()));
+            });
+            $('#btn-addStrategy').click(() => {
+                funds.forEach(f => {
+                    if (f.id == fundEle.val()) {
+                        f.bestStrategy = [
+                            yearEle.val(),
+                            buyEle.val(),
+                            saleEle.val(),
+                            startMoneyEle.val(),
+                            fieldMoneyEle.val()
+                        ].join(',');
+                        console.log('addStrategy:', f.name, f.bestStrategy);
+                    }
+                });
+                saveFunds();
+            });
+            $('#btn-readStrategy').click(() => {
+                const fund = funds.find(f => f.id == fundEle.val());
+                const str = fund.bestStrategy.split(',');
+                restoreOptions({
+                    yearEle: str[0],
+                    buyEle: str[1],
+                    saleEle: str[2],
+                    startMoneyEle: str[3],
+                    fieldMoneyEle: str[4]
+                });
+            });
+            $('#btn-runAllStrategy').click(() => {
+                console.clear();
+                funds.forEach(f => {
+                    if (f.bestStrategy) {
+                        const str = f.bestStrategy.split(',').map(s => Number(s));
+                        let values = fetchOne(f.id);
+                        const [profit, , maxLost, , progress] = recon(values, false, f.id, str[0], str[1], str[2], str[3], str[4], false);
+                        console.log('runAllStrategy', f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost, 'progress:', progress);
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        const formatDate = d => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
+        function maxDifference(arr) {
+            if (arr.length < 2) {
+                return 0;
+            }
+
+            let maxVal = Math.max(...arr);
+            let minVal = Math.min(...arr);
+
+            return maxVal - minVal;
+        }
+
+        const fetchOne = (id, force = false, cb = () => ({})) => {
+            let saveValues = localStorage.getItem(id);
+            if (saveValues && !force) {
+                cb();
+                return JSON.parse(saveValues);
+            }
+            savedValues = [];
+            const apiUrl = `https://fund.eastmoney.com/pingzhongdata/${id}.js`;
+            let lastDate = '';
+            fetch(apiUrl)
+                .then(response => response.text())
+                .then(data => {
+                    const regex = /var Data_netWorthTrend = (\[.*?\]);/;
+                    const matches = data.match(regex);
+                    if (matches && matches[1]) {
+                        const netWorthData = JSON.parse(matches[1]);
+                        netWorthData.forEach(entry => {
+                            const date = formatDate(new Date(entry.x));
+                            const value = entry.y;
+                            if (lastDate != date && value) {
+                                savedValues.push({
+                                    date,
+                                    value
+                                });
+                            }
+                            lastDate = date;
+                        });
+                        localStorage.setItem(id, JSON.stringify(savedValues));
+                        cb();
+                    } else
+                        console.error('err:unfined');
+                });
+            return savedValues;
+        };
+
+        const getMonthValues = dayValues => {
+            if (dayValues.length == 0) return [];
+            const monthValues = [];
+            dayValues.forEach(d => {
+                if (monthValues.length == 0 || d.date.substring(0, 7) != monthValues[monthValues.length - 1].date.substring(0, 7)) {
+                    monthValues.push({
+                        ...d,
+                        date: d.date.substring(0, 7)
+                    });
+                }
+            });
+            return monthValues;
+        };
+
+        const recon = (values, showLog, id, startYear, buyRate, saleRate, startMoney, oneFieldMoney, isMonth) => {
+            let startValue = values[0].value;
+            let startField = startMoney / startValue;
+            let totalMoney = startMoney;
+            let costValue = 0;
+            let totalField = 0;
+            let maxLost = 0, periodLost = 0;
+            const profit = {};
+            const endValue = values[values.length - 1].value;
+            let recordStartValue = startValue;
+            let winCount = 0;
+            values.forEach((obj, index) => {
+                if (obj.date.substring(0, 4) < String(startYear)) return;
+                const currentValue = obj.value;
+                const rate = costValue > 0 ? currentValue / costValue : 0;
+
+                if (totalField > 0 && rate >= saleRate) {
+                    const field = totalField;
+                    totalField -= field;
+                    totalMoney += field * currentValue;
+                    profit[obj.date.substring(0, 4)] = (profit[obj.date.substring(0, 4)] ? profit[obj.date.substring(0, 4)] : 0) + Math.floor(field * (currentValue - costValue));
+                    showLog && console.log(`[SSSS] ${obj.date}: `, Math.floor(totalMoney), Math.floor(totalField), `+${Math.floor(field * (currentValue - costValue))}`, currentValue, costValue, periodLost.toFixed(3), recordStartValue);
+                    recordStartValue = currentValue;
+                    costValue = totalField == 0 ? 0 : costValue;
+                    totalMoney = startMoney;
+                    periodLost = 0;
+                }
+                recordStartValue = Math.max(recordStartValue, currentValue);
+                let buyM = oneFieldMoney;
+                if (totalMoney >= buyM && recordStartValue * buyRate >= currentValue) {
+                    const buyObj = isMonth ? values[index] : values[index + 1];
+                    if (rate < 1 && buyObj) {
+                        const buyValue = buyObj.value;
+                        const field = buyM / buyValue;
+                        costValue = (costValue * totalField + buyM) / (totalField + field);
+                        totalField += field;
+                        totalMoney -= buyM;
+                        showLog && console.log(`[B] ${obj.date}: `, Math.floor(totalMoney), currentValue, costValue, (currentValue / costValue - 1).toFixed(3));
+                    }
+                }
+                if (totalField < 0 || totalMoney < 0) {
+                    console.error(`err ${obj.date}:`, totalMoney, totalField, currentValue, currentValue);
+                }
+                const currentLost = currentValue / costValue - 1;
+                maxLost = Math.min(currentLost, maxLost);
+                periodLost = Math.min(currentLost, periodLost);
+                if (currentLost > 0) {
+                    winCount++;
+                }
+            });
+            const finalMoney = totalMoney + totalField * endValue;
+            const totalProfit = Object.values(profit).reduce((pv, s) => s + pv, 0);
+            showLog && console.log(`end:`, totalMoney, endValue, costValue, maxLost.toFixed(3), totalProfit);
+            showLog && console.log('profit: ', profit, totalProfit, (winCount / values.length).toFixed(3));
+            const progress = ((startMoney - totalMoney) / startMoney).toFixed(2) * 100;
+            showLog && console.log('progress: ', progress);
+            return [profit, finalMoney, maxLost, (winCount / values.length).toFixed(3), progress];
+        };
+
+        const searching = (values, id, startYear, winRate, _buyRate, _saleRate, _startMoney, _oneFieldMoney, isMonth, winYears) => {
+            let results = [];
+            for (let buyRate = _buyRate; buyRate < 1; buyRate += 0.02) {
+                for (let saleRate = _saleRate; saleRate <= 2; saleRate += 0.02) {
+                    for (let oneMoney = _oneFieldMoney; oneMoney <= _startMoney / 2; oneMoney += 500) {
+                        const [current, finalMoney, maxLost, winRate] = recon(values, false, id, startYear, buyRate, saleRate, _startMoney, oneMoney, isMonth);
+                        const curPro = Object.values(current).reduce((pv, s) => s + pv, 0);
+                        const proGap = maxDifference(Object.values(current));
+                        const years = Object.values(current).length;
+                        results.push({
+                            profit: curPro,
+                            maxLost,
+                            years,
+                            winRate,
+                            saleRate,
+                            buyRate,
+                            startMoney: _startMoney,
+                            oneFieldMoney: oneMoney,
+                            logs: `[max]: ${Object.values(current).length}, ${buyRate.toFixed(2)}, ${saleRate.toFixed(2)}, ${oneMoney}, ${curPro}, ${maxLost.toFixed(3)}, ${winRate}, ${proGap}`
+                        });
+                    }
+                }
+            }
+
+            results.sort((a, b) => b.profit - a.profit);
+            window._results = results;
+            results = results.filter(r => r.maxLost >= -0.2 && r.winRate >= winRate && r.years >= winYears)
+                .slice(0, 10)
+                .reverse();
+            results.forEach(r => { console.log(r.logs); });
+            return results;
+        };
+    </script>
+</body>
+
+</html>
