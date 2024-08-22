@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <div id="main" style="opacity: 0.3;">
+    <div id="main" style="opacity: 1;">
         <select id="fund-selector"></select>
         <button id="btn-reload">reload</button>
         <br /><span>------------------------------------</span><br />
@@ -130,7 +130,7 @@
             }
             $('#btn-reload').click(() => {
                 localStorage.removeItem(fundEle.val());
-                fetchOne(fundEle.val(), true, () => console.log(`fetch ${fundEle.val()} succeed!`));
+                fetchOne(fundEle.val(), true, (savedValues) => console.log(`fetch ${fundEle.val()} succeed: ${savedValues.length}`));
             });
             $('#btn-recon').click(() => {
                 let values = fetchOne(fundEle.val());
@@ -219,10 +219,16 @@
                 console.clear();
                 funds.forEach(f => {
                     if (f.bestStrategy) {
-                        const str = f.bestStrategy.split(',').map(s => Number(s));
                         let values = fetchOne(f.id);
-                        const [profit, , maxLost, , progress] = recon(values, false, f.id, str[0], str[1], str[2], str[3], str[4], false);
-                        console.log('runAllStrategy', f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost, 'progress:', progress);
+                        const lastValueDate = new Date(values[values.length - 1].date);
+                        if (Date.now() - lastValueDate.getTime() > 24 * 3600 * 1000 * 5) {
+                            fetchOne(f.id, true, (savedValues) => console.log(`fetch ${f.id} succeed: ${savedValues.length}`));
+                            return;
+                        }
+                        const str = f.bestStrategy.split(',').map(s => Number(s));
+                        values = fetchOne(f.id);
+                        const [profit, , maxLost, winRate, progress] = recon(values, false, f.id, str[0], str[1], str[2], str[3], str[4], false);
+                        console.log(f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost, 'winRate:', winRate, 'progress:', progress);
                     }
                 });
             });
@@ -244,10 +250,10 @@
         }
 
         const fetchOne = (id, force = false, cb = () => ({})) => {
-            let saveValues = localStorage.getItem(id);
-            if (saveValues && !force) {
-                cb();
-                return JSON.parse(saveValues);
+            let savedValues = localStorage.getItem(id);
+            if (savedValues && !force) {
+                cb(savedValues);
+                return JSON.parse(savedValues);
             }
             savedValues = [];
             const apiUrl = `https://fund.eastmoney.com/pingzhongdata/${id}.js`;
@@ -270,10 +276,10 @@
                             }
                             lastDate = date;
                         });
+                        localStorage.removeItem(id);
                         localStorage.setItem(id, JSON.stringify(savedValues));
-                        cb();
-                    } else
-                        console.error('err:unfined');
+                        cb(savedValues);
+                    } else { console.error('err:unfined'); }
                 });
             return savedValues;
         };
