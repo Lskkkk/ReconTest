@@ -350,7 +350,7 @@
             });
             const finalMoney = totalMoney + totalField * endValue;
             const totalProfit = Object.values(profit).reduce((pv, s) => s + pv, 0);
-            showLog && console.log(`end:`, totalMoney, endValue, costValue, maxLost.toFixed(3), totalProfit);
+            showLog && console.log(`end:`, totalMoney, endValue, costValue, ((endValue - costValue) / costValue).toFixed(3), maxLost.toFixed(3), totalProfit);
             showLog && console.log('profit: ', profit, totalProfit, (winCount / values.length).toFixed(3));
             const progress = ((startMoney - totalMoney) / startMoney).toFixed(2) * 100;
             showLog && console.log('progress: ', progress);
