@@ -76,11 +76,11 @@
                 yearEle.append(`<option value="${i}">${i}</option>`);
                 winYearsEle.append(`<option value="${nowYear - i + 1}">${nowYear - i + 1}</option>`);
             }
-            for (let i = 0.7; i < 1; i += 0.02) {
-                buyEle.append(`<option value="${i}">${i.toFixed(2)}</option>`);
+            for (let i = 0.5; i < 1; i += 0.02) {
+                buyEle.append(`<option value="${i.toFixed(2)}">${i.toFixed(2)}</option>`);
             }
             for (let i = 1.05; i < 2; i += 0.02) {
-                saleEle.append(`<option value="${i}">${i.toFixed(2)}</option>`);
+                saleEle.append(`<option value="${i.toFixed(2)}">${i.toFixed(2)}</option>`);
             }
             for (let i = 100000; i >= 10000; i -= 10000) {
                 startMoneyEle.append(`<option value="${i}">${i}</option>`);
@@ -109,13 +109,13 @@
             const saveLastOptions = () => {
                 lastOptions = {
                     fundEle: fundEle.val(),
-                    yearEle: Number(yearEle.val()),
-                    buyEle: Number(buyEle.val()),
-                    saleEle: Number(saleEle.val()),
-                    startMoneyEle: Number(startMoneyEle.val()),
-                    fieldMoneyEle: Number(fieldMoneyEle.val()),
+                    yearEle: (yearEle.val()),
+                    buyEle: (buyEle.val()),
+                    saleEle: (saleEle.val()),
+                    startMoneyEle: (startMoneyEle.val()),
+                    fieldMoneyEle: (fieldMoneyEle.val()),
                     dayEle: dayEle.val(),
-                    winEle: Number(winEle.val()),
+                    winEle: (winEle.val()),
                     winYearsEle: winYearsEle.val()
                 };
                 console.log(JSON.stringify(lastOptions));
@@ -302,7 +302,12 @@
             return monthValues;
         };
 
-        const recon = (values, showLog, id, startYear, buyRate, saleRate, startMoney, oneFieldMoney, isMonth) => {
+        const recon = (values, showLog, id, _startYear, _buyRate, _saleRate, _startMoney, _oneFieldMoney, isMonth) => {
+            let startYear = Number(_startYear);
+            let buyRate = Number(_buyRate);
+            let saleRate = Number(_saleRate);
+            let startMoney = Number(_startMoney);
+            let oneFieldMoney = Number(_oneFieldMoney);
             let startValue = values[0].value;
             let startField = startMoney / startValue;
             let totalMoney = startMoney;
@@ -361,11 +366,15 @@
             return [profit, finalMoney, maxLost, (winCount / values.length).toFixed(3), progress];
         };
 
-        const searching = (values, id, startYear, winRate, _buyRate, _saleRate, _startMoney, _oneFieldMoney, isMonth, winYears) => {
+        const searching = (values, id, _startYear, _winRate, _buyRate, _saleRate, _startMoney, _oneFieldMoney, isMonth, _winYears) => {
             let results = [];
-            for (let buyRate = _buyRate; buyRate < 1; buyRate += 0.02) {
-                for (let saleRate = _saleRate; saleRate <= 2; saleRate += 0.02) {
-                    for (let oneMoney = _oneFieldMoney; oneMoney <= _startMoney / 2; oneMoney += 500) {
+            let startYear = Number(_startYear);
+            let startMoney = Number(_startMoney);
+            let oneFieldMoney = Number(_oneFieldMoney);
+            let winYears = Number(_winYears);
+            for (let buyRate = Number(_buyRate); buyRate < 1; buyRate += 0.02) {
+                for (let saleRate = Number(_saleRate); saleRate <= 2; saleRate += 0.02) {
+                    for (let oneMoney = oneFieldMoney; oneMoney <= startMoney / 2; oneMoney += 500) {
                         const [current, finalMoney, maxLost, winRate] = recon(values, false, id, startYear, buyRate, saleRate, _startMoney, oneMoney, isMonth);
                         const curPro = Object.values(current).reduce((pv, s) => s + pv, 0);
                         const proGap = maxDifference(Object.values(current));
@@ -377,7 +386,7 @@
                             winRate,
                             saleRate,
                             buyRate,
-                            startMoney: _startMoney,
+                            startMoney: startMoney,
                             oneFieldMoney: oneMoney,
                             logs: `[max]: ${Object.values(current).length}, ${buyRate.toFixed(2)}, ${saleRate.toFixed(2)}, ${oneMoney}, ${curPro}, ${maxLost.toFixed(3)}, ${winRate}, ${proGap}`
                         });
@@ -387,7 +396,7 @@
 
             results.sort((a, b) => b.profit - a.profit);
             window._results = results;
-            results = results.filter(r => r.maxLost >= -0.2 && r.winRate >= winRate && r.years >= winYears)
+            results = results.filter(r => r.maxLost >= -0.2 && r.winRate >= Number(_winRate) && r.years >= winYears)
                 .slice(0, 10)
                 .reverse();
             results.forEach(r => { console.log(r.logs); });
