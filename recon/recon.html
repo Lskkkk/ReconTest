@@ -38,7 +38,8 @@
             { name: '300', id: '110020' },
             { name: 'zzhl', id: '090010' },
             { name: 'huangj', id: '000217' },
-            { name: 'baijiu', id: '161725' }
+            { name: 'baijiu', id: '161725' },
+            { name: 'fgth', id: '161005' }
         ];
         const nowYear = new Date().getFullYear();
 
@@ -232,7 +233,7 @@
                         const isMonth = str[5] == 'month';
                         values = isMonth ? getMonthValues(values) : values;
                         const [profit, , maxLost, winRate, progress] = recon(values, false, f.id, Number(str[0]), Number(str[1]), Number(str[2]), Number(str[3]), Number(str[4]), isMonth);
-                        console.log(f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost, 'winRate:', winRate, 'progress:', progress);
+                        console.log(f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost.toFixed(3), 'winRate:', winRate, 'progress:', progress);
                     }
                 });
             });
