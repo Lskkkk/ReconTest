@@ -318,6 +318,7 @@
             const endValue = values[values.length - 1].value;
             let recordStartValue = startValue;
             let winCount = 0;
+            let winCountTotal = 0;
             values.forEach((obj, index) => {
                 if (obj.date.substring(0, 4) < String(startYear)) return;
                 const currentValue = obj.value;
@@ -350,20 +351,24 @@
                 if (totalField < 0 || totalMoney < 0) {
                     console.error(`err ${obj.date}:`, totalMoney, totalField, currentValue, currentValue);
                 }
-                const currentLost = currentValue / costValue - 1;
-                maxLost = Math.min(currentLost, maxLost);
-                periodLost = Math.min(currentLost, periodLost);
-                if (currentLost > 0) {
-                    winCount++;
+                if (totalField > 0) {
+                    const currentLost = currentValue / costValue - 1;
+                    maxLost = Math.min(currentLost, maxLost);
+                    periodLost = Math.min(currentLost, periodLost);
+                    if (currentLost > 0) {
+                        winCount++;
+                    }
+                    winCountTotal++;
                 }
             });
             const finalMoney = totalMoney + totalField * endValue;
             const totalProfit = Object.values(profit).reduce((pv, s) => s + pv, 0);
             showLog && console.log(`end:`, totalMoney, endValue, costValue, ((endValue - costValue) / costValue).toFixed(3), maxLost.toFixed(3), totalProfit);
-            showLog && console.log('profit: ', profit, totalProfit, (winCount / values.length).toFixed(3));
+            showLog && console.log('profit: ', profit, totalProfit);
+            showLog && console.log('winRate: ', winCount, '/', winCountTotal, '=', (winCount / winCountTotal).toFixed(3), 'emptyRate: ', (1 - winCountTotal / values.length).toFixed(3));
             const progress = ((startMoney - totalMoney) / startMoney).toFixed(2) * 100;
             showLog && console.log('progress: ', progress);
-            return [profit, finalMoney, maxLost, (winCount / values.length).toFixed(3), progress];
+            return [profit, finalMoney, maxLost, (winCount / winCountTotal).toFixed(3), progress];
         };
 
         const searching = (values, id, _startYear, _winRate, _buyRate, _saleRate, _startMoney, _oneFieldMoney, isMonth, _winYears) => {
