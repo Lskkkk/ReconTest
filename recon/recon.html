@@ -27,19 +27,23 @@
         <button id="btn-reset">reset</button><br /><br />
         <button id="btn-addStrategy">addStrategy</button>
         <button id="btn-readStrategy">readStrategy</button>
+        <span>----</span>
+        <button id="btn-deleteStrategy">deleteStrategy</button><br />
         <button id="btn-runAllStrategy">runAllStrategy</button>
     </div>
 
     <script>
         let funds = [
-            { name: 'szzs', id: '470007', bestStrategy: '' },
+            { name: 'szzs', id: '470007', bestStrategy: [] },
             { name: 'hldb', id: '005562' },
             { name: 'dpqh', id: '007937' },
             { name: '300', id: '110020' },
             { name: 'zzhl', id: '090010' },
             { name: 'huangj', id: '000217' },
             { name: 'baijiu', id: '161725' },
-            { name: 'fgth', id: '161005' }
+            { name: 'fgth', id: '161005' },
+            { name: 'bp500', id: '050025' },
+            { name: 'nsdk', id: '040046' }
         ];
         const nowYear = new Date().getFullYear();
 
@@ -80,7 +84,7 @@
             for (let i = 0.5; i < 1; i += 0.02) {
                 buyEle.append(`<option value="${i.toFixed(2)}">${i.toFixed(2)}</option>`);
             }
-            for (let i = 1.05; i < 2; i += 0.02) {
+            for (let i = 1.05; i <= 5.2; i += i < 2 ? 0.02 : 0.5) {
                 saleEle.append(`<option value="${i.toFixed(2)}">${i.toFixed(2)}</option>`);
             }
             for (let i = 100000; i >= 10000; i -= 10000) {
@@ -193,7 +197,9 @@
             $('#btn-addStrategy').click(() => {
                 funds.forEach(f => {
                     if (f.id == fundEle.val()) {
-                        f.bestStrategy = [
+                        const strList = f.bestStrategy.split('|');
+                        const index = strList.findIndex(f => f.includes('dayEle.val()'));
+                        const str = [
                             yearEle.val(),
                             buyEle.val(),
                             saleEle.val(),
@@ -201,6 +207,12 @@
                             fieldMoneyEle.val(),
                             dayEle.val()
                         ].join(',');
+                        if (index == -1) {
+                            strList.push(str);
+                        } else {
+                            strList.splice(index, 1, str);
+                        }
+                        f.bestStrategy = strList.join('|');
                         console.log('addStrategy:', f.name, f.bestStrategy);
                     }
                 });
@@ -208,18 +220,35 @@
             });
             $('#btn-readStrategy').click(() => {
                 const fund = funds.find(f => f.id == fundEle.val());
-                const str = fund.bestStrategy.split(',');
-                restoreOptions({
-                    yearEle: str[0],
-                    buyEle: str[1],
-                    saleEle: str[2],
-                    startMoneyEle: str[3],
-                    fieldMoneyEle: str[4],
-                    dayEle: str[5]
+                const strList = fund.bestStrategy.split('|');
+                let str = strList.find(f => f.includes(dayEle.val()));
+                if (str) {
+                    str = str.split(',');
+                    restoreOptions({
+                        yearEle: str[0],
+                        buyEle: str[1],
+                        saleEle: str[2],
+                        startMoneyEle: str[3],
+                        fieldMoneyEle: str[4],
+                        dayEle: str[5]
+                    });
+                } else {
+                    console.error('not found');
+                }
+            });
+            $('#btn-deleteStrategy').click(() => {
+                funds.forEach(f => {
+                    if (f.id == fundEle.val()) {
+                        let strList = f.bestStrategy.split('|').filter(f => !f.includes(dayEle.val()));
+                        f.bestStrategy = strList.join('|');
+                        console.log('deleted, left: ', f.bestStrategy);
+                    }
                 });
+                saveFunds();
             });
             $('#btn-runAllStrategy').click(() => {
                 console.clear();
+                const month_logs = [], day_logs = [];
                 funds.forEach(f => {
                     if (f.bestStrategy) {
                         let values = fetchOne(f.id);
@@ -228,14 +257,26 @@
                             fetchOne(f.id, true, (savedValues) => console.log(`fetch ${f.id} succeed: ${savedValues.length}`));
                             return;
                         }
-                        const str = f.bestStrategy.split(',');
-                        values = fetchOne(f.id);
-                        const isMonth = str[5] == 'month';
-                        values = isMonth ? getMonthValues(values) : values;
-                        const [profit, , maxLost, winRate, progress] = recon(values, false, f.id, Number(str[0]), Number(str[1]), Number(str[2]), Number(str[3]), Number(str[4]), isMonth);
-                        console.log(f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost.toFixed(3), 'winRate:', winRate, 'progress:', progress);
+                        const strList = f.bestStrategy.split('|');
+                        strList.forEach(s => {
+                            const str = s.split(',');
+                            values = fetchOne(f.id);
+                            const isMonth = str[5] == 'month';
+                            values = isMonth ? getMonthValues(values) : values;
+                            const [profit, , maxLost, winRate, progress] = recon(values, false, f.id, Number(str[0]), Number(str[1]), Number(str[2]), Number(str[3]), Number(str[4]), isMonth);
+                            const _log = [f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost.toFixed(3), 'winRate:', winRate, 'progress:', progress].join('|');
+                            if (isMonth) {
+                                month_logs.push(_log);
+                            } else {
+                                day_logs.push(_log);
+                            }
+                        });
                     }
                 });
+                console.log('*****************day*****************');
+                day_logs.forEach(d => console.log(...d.split('|')));
+                console.log('****************month****************');
+                month_logs.forEach(d => console.log(...d.split('|')));
             });
         });
     </script>
@@ -379,7 +420,7 @@
             let oneFieldMoney = Number(_oneFieldMoney);
             let winYears = Number(_winYears);
             for (let buyRate = Number(_buyRate); buyRate < 1; buyRate += 0.02) {
-                for (let saleRate = Number(_saleRate); saleRate <= 2; saleRate += 0.02) {
+                for (let saleRate = Number(_saleRate); saleRate <= 5.2; saleRate += saleRate < 2 ? 0.02 : 0.5) {
                     for (let oneMoney = oneFieldMoney; oneMoney <= startMoney / 2; oneMoney += 500) {
                         const [current, finalMoney, maxLost, winRate] = recon(values, false, id, startYear, buyRate, saleRate, _startMoney, oneMoney, isMonth);
                         const curPro = Object.values(current).reduce((pv, s) => s + pv, 0);
