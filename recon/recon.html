@@ -198,7 +198,7 @@
                 funds.forEach(f => {
                     if (f.id == fundEle.val()) {
                         const strList = f.bestStrategy.split('|');
-                        const index = strList.findIndex(f => f.includes('dayEle.val()'));
+                        const index = strList.findIndex(f => f.includes(dayEle.val()));
                         const str = [
                             yearEle.val(),
                             buyEle.val(),
