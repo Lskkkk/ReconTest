@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="./jquery.js"></script>
+    <script src="../resource/jquery.js"></script>
     <title>Test</title>
 </head>
 
@@ -333,12 +333,19 @@
         const getMonthValues = dayValues => {
             if (dayValues.length == 0) return [];
             const monthValues = [];
+            let daysInMonth = [];
+            let currentMonth = dayValues[0].date.substring(0, 7);
             dayValues.forEach(d => {
-                if (monthValues.length == 0 || d.date.substring(0, 7) != monthValues[monthValues.length - 1].date.substring(0, 7)) {
+                if (currentMonth == d.date.substring(0, 7)) {
+                    daysInMonth.push(d);
+                } else {
                     monthValues.push({
-                        ...d,
-                        date: d.date.substring(0, 7)
+                        value: Number((daysInMonth.reduce((s, pv) => s + pv.value, 0) / daysInMonth.length).toFixed(4)),
+                        date: currentMonth
                     });
+                    // console.log(currentMonth, daysInMonth, monthValues[monthValues.length - 1]);
+                    daysInMonth = [d];
+                    currentMonth = d.date.substring(0, 7);
                 }
             });
             return monthValues;
@@ -381,7 +388,8 @@
                 let buyM = oneFieldMoney;
                 if (totalMoney >= buyM && recordStartValue * buyRate >= currentValue) {
                     const buyObj = isMonth ? values[index] : values[index + 1];
-                    if (rate < 1 && buyObj) {
+                    const rateWraper = isMonth ? 1.02 : 1;
+                    if (rate < rateWraper && buyObj) {
                         const buyValue = buyObj.value;
                         const field = buyM / buyValue;
                         costValue = (costValue * totalField + buyM) / (totalField + field);

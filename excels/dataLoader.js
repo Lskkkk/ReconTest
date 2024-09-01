@@ -65,6 +65,11 @@ const jumpToEndDate = async () => {
   }
 };
 
+const selectBonus = async () => {
+  const selector = await page.$('.ivu-select-selection');
+  await selector.click();
+};
+
 const exportData = async () => {
   const panelContainer = await page.$('.compare-indices-opt');
   const btns = await panelContainer.$$('.ivu-btn');
@@ -72,7 +77,7 @@ const exportData = async () => {
 };
 
 (async () => {
-  const downloadPath = '\\excels';
+  const downloadPath = 'C:\\Users\\Lsk-pc2\\Documents\\Code\\ReconTest\\excels\\files';
   const browser = await puppeteer.launch({
     headless: false,
     args: [
@@ -93,11 +98,12 @@ const exportData = async () => {
   await page.goto('https://www.csindex.com.cn/#/indices/family/detail?indexCode=H30269');
 
   const dateEle = await page.$('.ivu-date-picker-rel');
-  await dateEle.click();
+  // await dateEle.click();
 
-  await jumpToStartDate(2014, 1, 2);
-  await jumpToEndDate();
-  await exportData();
+  // await jumpToStartDate(2014, 1, 2);
+  // await jumpToEndDate();
+  await selectBonus();
+  // await exportData();
 
   // await page.screenshot({path: 'example.png'});
   // await browser.close();
