@@ -16,7 +16,7 @@
         const mainChart = echarts.init(document.getElementById('main'));
         const formatDay = day => `${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
 
-        const startDay = '20190830';
+        const startDay = '20150828';
         const series = Object.keys(allFunds).map(fund => {
             return {
                 name: fund,
