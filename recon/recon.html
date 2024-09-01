@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../resource/jquery.js"></script>
+    <script src="../excels/handledData/all.js"></script>
     <title>Test</title>
 </head>
 
@@ -45,6 +46,12 @@
             { name: 'bp500', id: '050025' },
             { name: 'nsdk', id: '040046' }
         ];
+        Object.keys(allFunds).forEach(af => {
+            funds.push({
+                name: af,
+                id: af
+            });
+        });
         const nowYear = new Date().getFullYear();
 
         const readFunds = () => {
@@ -197,7 +204,8 @@
             $('#btn-addStrategy').click(() => {
                 funds.forEach(f => {
                     if (f.id == fundEle.val()) {
-                        const strList = f.bestStrategy.split('|');
+                        f.bestStrategy = f.bestStrategy || '';
+                        const strList = f.bestStrategy.split('|').filter(s => s);
                         const index = strList.findIndex(f => f.includes(dayEle.val()));
                         const str = [
                             yearEle.val(),
@@ -296,6 +304,12 @@
         }
 
         const fetchOne = (id, force = false, cb = () => ({})) => {
+            if (id.includes('全收益')) {
+                return Object.keys(allFunds[id]).map(day => ({
+                    value: allFunds[id][day],
+                    date: `${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`
+                }));
+            }
             let savedValues = localStorage.getItem(id);
             if (savedValues && !force) {
                 cb(savedValues);

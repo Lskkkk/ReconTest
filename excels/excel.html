@@ -16,7 +16,7 @@
         const mainChart = echarts.init(document.getElementById('main'));
         const formatDay = day => `${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
 
-        const startDay = '20150105';
+        const startDay = '20190830';
         const series = Object.keys(allFunds).map(fund => {
             return {
                 name: fund,
@@ -34,7 +34,7 @@
             showSymbol: false,
             data: []
         };
-        const fundsNames = ["中证中金优选300全收益指数", "中证东方红红利低波动全收益指数", "中证东方红红利低波动全收益指数"];
+        const fundsNames = ["中证A50全收益指数", "中证东方红红利低波动全收益指数", "中证东方红红利低波动全收益指数"];
         // const fundsNames = Object.keys(allFunds);
         let startValue = 1000000000;
         Object.keys(allFunds[fundsNames[0]]).filter(day => day >= startDay).forEach(day => {
@@ -51,13 +51,13 @@
 
         const option = {
             title: {
-                text: '历史净值(百分比)'
+                text: '净值百分比'
             },
             tooltip: {
                 trigger: 'axis'
             },
             legend: {
-                data: ['点数']
+                data: Object.keys(allFunds)
             },
             grid: {
                 left: '3%',
