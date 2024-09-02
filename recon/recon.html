@@ -357,10 +357,13 @@
                         value: Number((daysInMonth.reduce((s, pv) => s + pv.value, 0) / daysInMonth.length).toFixed(4)),
                         date: currentMonth
                     });
-                    // console.log(currentMonth, daysInMonth, monthValues[monthValues.length - 1]);
                     daysInMonth = [d];
                     currentMonth = d.date.substring(0, 7);
                 }
+            });
+            monthValues.push({
+                value: Number((daysInMonth.reduce((s, pv) => s + pv.value, 0) / daysInMonth.length).toFixed(4)),
+                date: currentMonth
             });
             return monthValues;
         };
