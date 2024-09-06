@@ -145,11 +145,12 @@
                 fetchOne(fundEle.val(), true, (savedValues) => console.log(`fetch ${fundEle.val()} succeed: ${savedValues.length}`));
             });
             $('#btn-recon').click(() => {
-                let values = fetchOne(fundEle.val());
+                let originalValues = fetchOne(fundEle.val());
                 saveLastOptions();
                 console.clear();
-                values = lastOptions.dayEle == 'month' ? getMonthValues(values) : values;
+                let values = lastOptions.dayEle == 'month' ? getMonthValues(originalValues) : originalValues;
                 recon(values, true, lastOptions.fundEle, lastOptions.yearEle, lastOptions.buyEle, lastOptions.saleEle, lastOptions.startMoneyEle, lastOptions.fieldMoneyEle, lastOptions.dayEle == 'month');
+                console.log('now value: ', originalValues[originalValues.length - 1]);
             });
             $('#btn-search').click(() => {
                 $('#btn-search').text('searching...');
@@ -262,17 +263,29 @@
                         let values = fetchOne(f.id);
                         const lastValueDate = new Date(values[values.length - 1].date);
                         if (Date.now() - lastValueDate.getTime() > 24 * 3600 * 1000 * 5) {
+                            console.log(f.id, ' ** 已过期');
                             fetchOne(f.id, true, (savedValues) => console.log(`fetch ${f.id} succeed: ${savedValues.length}`));
                             return;
                         }
                         const strList = f.bestStrategy.split('|');
                         strList.forEach(s => {
                             const str = s.split(',');
-                            values = fetchOne(f.id);
+                            const originalValues = fetchOne(f.id);
                             const isMonth = str[5] == 'month';
-                            values = isMonth ? getMonthValues(values) : values;
-                            const [profit, , maxLost, winRate, progress] = recon(values, false, f.id, Number(str[0]), Number(str[1]), Number(str[2]), Number(str[3]), Number(str[4]), isMonth);
-                            const _log = [f.name, str, 'profit:', Object.values(profit).reduce((pv, s) => s + pv, 0), 'maxLost:', maxLost.toFixed(3), 'winRate:', winRate, 'progress:', progress].join('|');
+                            let values = isMonth ? getMonthValues(originalValues) : originalValues;
+                            const [profit, , maxLost, winRate, progress, costValue] = recon(values, false, f.id, Number(str[0]), Number(str[1]), Number(str[2]), Number(str[3]), Number(str[4]), isMonth);
+                            const currentValue = originalValues[originalValues.length - 1];
+                            const _log = [
+                                f.name,
+                                '\n' + str,
+                                '\nprofit: ' + Object.values(profit).reduce((pv, s) => s + pv, 0),
+                                'winRate: ' + winRate,
+                                '\nnow: ' + currentValue.date,
+                                'costValue: ' + costValue.toFixed(3),
+                                'currentLost: ' + (costValue == 0 ? 0 : ((currentValue.value - costValue) / costValue).toFixed(3)),
+                                'maxLost: ' + maxLost.toFixed(3),
+                                '\nprogress: ' + progress,
+                            ].join('|');
                             if (isMonth) {
                                 month_logs.push(_log);
                             } else {
@@ -435,7 +448,7 @@
             showLog && console.log('winRate: ', winCount, '/', winCountTotal, '=', (winCount / winCountTotal).toFixed(3), 'emptyRate: ', (1 - winCountTotal / values.length).toFixed(3));
             const progress = ((startMoney - totalMoney) / startMoney).toFixed(2) * 100;
             showLog && console.log('progress: ', progress);
-            return [profit, finalMoney, maxLost, (winCount / winCountTotal).toFixed(3), progress];
+            return [profit, finalMoney, maxLost, (winCount / winCountTotal).toFixed(3), progress, costValue];
         };
 
         const searching = (values, id, _startYear, _winRate, _buyRate, _saleRate, _startMoney, _oneFieldMoney, isMonth, _winYears) => {
@@ -446,7 +459,7 @@
             let winYears = Number(_winYears);
             for (let buyRate = Number(_buyRate); buyRate < 1; buyRate += 0.02) {
                 for (let saleRate = Number(_saleRate); saleRate <= 5.2; saleRate += saleRate < 2 ? 0.02 : 0.5) {
-                    for (let oneMoney = oneFieldMoney; oneMoney <= startMoney / 2; oneMoney += 500) {
+                    for (let oneMoney = oneFieldMoney; oneMoney <= (isMonth ? startMoney / 4 : startMoney / 10); oneMoney += oneMoney >= 10000 ? 5000 : 500) {
                         const [current, finalMoney, maxLost, winRate] = recon(values, false, id, startYear, buyRate, saleRate, _startMoney, oneMoney, isMonth);
                         const curPro = Object.values(current).reduce((pv, s) => s + pv, 0);
                         const proGap = maxDifference(Object.values(current));
