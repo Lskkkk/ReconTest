@@ -1,3 +1,4 @@
+const { getCache, getCacheFundExtraOptions } = require("../utils/cacheHandler");
 const { fetchFundByApi } = require("../utils/fundApi");
 
 const getFund = async (ctx) => {
@@ -10,13 +11,9 @@ const getFund = async (ctx) => {
     ctx.body = JSON.stringify(fundsData);
 };
 
-const getFundSelector = async (ctx) => {
-    if (!id) {
-        ctx.body = 'no id';
-        return;
-    }
-    const fundsData = await fetchFundByApi(id, forceUpdate);
+const getFundExtraOptions = (ctx) => {
+    const fundsData = getCacheFundExtraOptions();
     ctx.body = JSON.stringify(fundsData);
 };
 
-module.exports = { getFund, getFundSelector };
+module.exports = { getFund, getFundExtraOptions };

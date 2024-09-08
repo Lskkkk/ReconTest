@@ -2,7 +2,7 @@ const ExcelJS = require("exceljs/dist/es5");
 const fs = require("fs");
 const path = require("path");
 
-const { formatDate } = require("./date");
+const { formatDate, formatDateStr } = require("./date");
 
 const fileDir = path.join(__dirname, "../cache/excelFiles");
 const dataDir = path.join(__dirname, "../cache/handledData");
@@ -23,9 +23,12 @@ const init = async () => {
         const [, day, , cnName, , , , , , , value] = row.values;
         if (cnName.includes("指数中文全称")) return;
         if (!allData[cnName]) {
-          allData[cnName] = {};
+          allData[cnName] = [];
         }
-        allData[cnName][day] = Number(value);
+        allData[cnName].push({
+          date: formatDateStr(day),
+          value: Number(value)
+        });
       });
     });
   });
@@ -76,8 +79,8 @@ const updateCache = async (jsonData) => {
       return;
     }
     if (
-      Object.values(originalData[fundId]).length <
-      Object.values(jsonData[fundId]).length
+      originalData[fundId].length <
+      jsonData[fundId].length
     ) {
       originalData[fundId] = jsonData[fundId];
       return;
@@ -88,6 +91,19 @@ const updateCache = async (jsonData) => {
   originalData[LAST_REQUEST] = lastRequest;
   const jsonContent = JSON.stringify(originalData, null, 2);
   fs.writeFileSync(fileJsonPath, jsonContent, "utf8");
+};
+
+const getCacheFundExtraOptions = () => {
+  let originalData = {};
+  try {
+    originalData = JSON.parse(fs.readFileSync(fileJsonPath, "utf8"));
+  } catch (error) {
+    console.log(error);
+  }
+  if (Object.keys(originalData).length > 0) {
+    return Object.keys(originalData).filter(key => key.includes('全收益'));
+  }
+  return [];
 };
 
 const getGuiCache = () => {
@@ -103,6 +119,7 @@ module.exports = {
   LAST_REQUEST,
   getCache,
   updateCache,
+  getCacheFundExtraOptions,
   getGuiCache,
   setGuiCache,
 };

@@ -3,7 +3,7 @@ const { formatDate } = require('./date');
 const { getCache, updateCache } = require('./cacheHandler');
 
 const fetchFundByApi = async (id, forceUpdate = false) => {
-    if (!forceUpdate) {
+    if (!forceUpdate || id.includes('全收益')) {
         const cacheData = getCache(id);
         if (cacheData.length > 0) {
             return cacheData;

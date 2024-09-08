@@ -3,7 +3,7 @@ const cors = require("koa2-cors");
 const Router = require("koa-router");
 const router = new Router();
 
-const { getFund } = require("./controllers/funds");
+const { getFund, getFundExtraOptions } = require("./controllers/funds");
 const { getGuiCache, setGuiCache } = require("./utils/cacheHandler");
 const { fetchFundByApi } = require("./utils/fundApi");
 
@@ -29,6 +29,9 @@ router
   })
   .get("/getFund", async (ctx, next) => {
     await getFund(ctx);
+  })
+  .get("/getFundExtraOptions", async (ctx, next) => {
+    getFundExtraOptions(ctx);
   })
   .get("/getGuiCache", async (ctx, next) => {
     ctx.body = getGuiCache(ctx);
