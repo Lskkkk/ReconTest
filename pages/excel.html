@@ -17,7 +17,12 @@
         const compareDate = (a, b) => {
             const aList = a.split('-');
             const bList = b.split('-');
-            return aList.every((_, index) => a[index] >= b[index]);
+            return aList.every((_, index) => Number(aList[index]) >= Number(bList[index]));
+        };
+        const similarDate = (a, b) => {
+            const aList = a.split('-');
+            const bList = b.split('-');
+            return aList[0] == bList[0] && aList[1] == bList[1] && Math.abs(aList[2] - bList[2]) <= 10;
         };
         const initDom = () => {
             console.log('start render');
@@ -36,14 +41,13 @@
                 const mainChart = echarts.init(document.getElementById('main'));
                 const formatDay = day => `${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
 
-                const startDay = '2015-08-28';
-                const series = Object.keys(allFunds).map(fund => {
-                    const values = allFunds[fund].filter(obj => compareDate(obj.date, startDay));
+                const startDay = '2015-8-28';
+                const series = Object.keys(allFunds).map(id => {
+                    const values = allFunds[id].filter(obj => compareDate(obj.date, startDay));
                     if (values.length == 0) return [];
                     const firstValue = values[0];
-                    console.log(fund, compareDate(firstValue.date, startDay));
                     return {
-                        name: fund,
+                        name: funds[id].name,
                         type: 'line',
                         showSymbol: false,
                         data: values.map(obj => {
@@ -51,26 +55,27 @@
                         })
                     };
                 });
-                // const avg = {
-                //     name: 'AVG',
-                //     type: 'line',
-                //     showSymbol: false,
-                //     data: []
-                // };
-                // const fundsNames = ["中证A50全收益指数", "中证东方红红利低波动全收益指数", "中证东方红红利低波动全收益指数"];
-                // // const fundsNames = Object.keys(allFunds);
-                // let startValue = 1000000000;
-                // Object.keys(allFunds[fundsNames[0]]).filter(day => day >= startDay).forEach(day => {
-                //     const allValues = fundsNames.map(fundName => allFunds[fundName][day]);
-                //     const currentValue = Number((allValues.reduce((s, pv) => s += pv, 0) / fundsNames.length).toFixed(4));
-                //     if (day == startDay) {
-                //         startValue = currentValue;
-                //         console.log(day, startValue);
-                //     }
-                //     avg.data.push([formatDay(day), Number((currentValue / startValue).toFixed(4))]);
-                //     // console.log(day, avg.data[avg.data.length - 1]);
-                // });
-                // series.push(avg);
+                const avg = {
+                    name: 'AVG',
+                    type: 'line',
+                    showSymbol: false,
+                    data: []
+                };
+                const fundsNames = [
+                    "中证A50全收益指数",
+                    "中证东方红红利低波动全收益指数",
+                    "中证东方红红利低波动全收益指数"
+                ];
+                let startValue = 0;
+                allFunds[fundsNames[0]].filter(obj => compareDate(obj.date, startDay)).forEach(obj => {
+                    const allValues = (fundsNames.map(fundName => (allFunds[fundName].find(f => f.date == obj.date) || { value: 0 }).value)).filter(v => v > 0);
+                    const currentValue = Number((allValues.reduce((s, pv) => s += pv, 0) / allValues.length).toFixed(4));
+                    if (!startValue) {
+                        startValue = currentValue;
+                    }
+                    avg.data.push([obj.date, Number((currentValue / startValue).toFixed(4))]);
+                });
+                series.push(avg);
 
                 const option = {
                     title: {
@@ -80,7 +85,7 @@
                         trigger: 'axis'
                     },
                     legend: {
-                        data: Object.keys(allFunds)
+                        data: Object.values(funds).map(fund => fund.name).concat(['AVG'])
                     },
                     grid: {
                         left: '3%',
@@ -104,9 +109,7 @@
                         boundaryGap: [0, '100%'],
                         splitLine: {
                             show: false
-                        },
-                        min: 0,
-                        max: 10
+                        }
                     },
                     dataZoom: [
                         {

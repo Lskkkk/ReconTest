@@ -13,19 +13,22 @@
 
 let funds = {
     ["470007"]: {
-        name: "szzs",
+        name: "上证综指ETF",
     },
     ["005562"]: {
-        name: "hldb",
+        name: "红利低波ETF",
     },
     ["007937"]: {
-        name: "dpqh",
+        name: "豆粕期货ETF",
     },
     ["110020"]: {
-        name: "300",
+        name: "沪深300ETF",
     },
     ["000217"]: {
-        name: "huangj",
+        name: "黄金ETF",
+    },
+    ["050025"]: {
+        name: "标普500ETF",
     },
 };
 
@@ -35,7 +38,10 @@ const readFunds = async () => {
         cache = JSON.parse(cache);
         if (cache["funds"]) {
             Object.keys(cache["funds"]).forEach((cf) => {
-                funds[cf] = cache["funds"][cf];
+                funds[cf] = {
+                    ...cache["funds"][cf],
+                    ...funds[cf]
+                };
             });
         }
     }
