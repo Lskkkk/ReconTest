@@ -42,16 +42,24 @@
                 const formatDay = day => `${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
 
                 const startDay = '2015-8-28';
-                const series = Object.keys(allFunds).map(id => {
+                const recountAllFunds = {};
+                Object.keys(allFunds).map(id => {
                     const values = allFunds[id].filter(obj => compareDate(obj.date, startDay));
                     if (values.length == 0) return [];
                     const firstValue = values[0];
+                    const recountValues = values.map(obj => ({
+                        date: obj.date,
+                        value: Number((obj.value / firstValue.value).toFixed(4))
+                    }));
+                    recountAllFunds[id] = recountValues;
+                });
+                const series = Object.keys(recountAllFunds).map(id => {
                     return {
                         name: funds[id].name,
                         type: 'line',
                         showSymbol: false,
-                        data: values.map(obj => {
-                            return [obj.date, Number((obj.value / firstValue.value).toFixed(4))];
+                        data: recountAllFunds[id].map(obj => {
+                            return [obj.date, obj.value];
                         })
                     };
                 });
@@ -64,11 +72,10 @@
                 const fundsNames = [
                     "中证A50全收益指数",
                     "中证东方红红利低波动全收益指数",
-                    "中证东方红红利低波动全收益指数"
                 ];
                 let startValue = 0;
-                allFunds[fundsNames[0]].filter(obj => compareDate(obj.date, startDay)).forEach(obj => {
-                    const allValues = (fundsNames.map(fundName => (allFunds[fundName].find(f => f.date == obj.date) || { value: 0 }).value)).filter(v => v > 0);
+                recountAllFunds[fundsNames[0]].filter(obj => compareDate(obj.date, startDay)).forEach(obj => {
+                    const allValues = (fundsNames.map(fundName => (recountAllFunds[fundName].find(f => f.date == obj.date) || { value: 0 }).value)).filter(v => v > 0);
                     const currentValue = Number((allValues.reduce((s, pv) => s += pv, 0) / allValues.length).toFixed(4));
                     if (!startValue) {
                         startValue = currentValue;
@@ -76,6 +83,14 @@
                     avg.data.push([obj.date, Number((currentValue / startValue).toFixed(4))]);
                 });
                 series.push(avg);
+                const defaultSelectedLegends = {
+                    'AVG': true
+                };
+                if (fundsNames.length != 0) {
+                    Object.keys(recountAllFunds).forEach(fundName => defaultSelectedLegends[fundName] = false);
+                    Object.keys(funds).forEach(id => defaultSelectedLegends[funds[id].name] = false);
+                    fundsNames.forEach(fundName => defaultSelectedLegends[fundName] = true);
+                }
 
                 const option = {
                     title: {
@@ -85,7 +100,8 @@
                         trigger: 'axis'
                     },
                     legend: {
-                        data: Object.values(funds).map(fund => fund.name).concat(['AVG'])
+                        data: Object.values(funds).map(fund => fund.name).concat(['AVG']),
+                        selected: defaultSelectedLegends
                     },
                     grid: {
                         left: '3%',
@@ -129,7 +145,6 @@
                     series
                 };
                 mainChart.setOption(option);
-                console.log(allFunds);
             }, 1000);
         };
 
