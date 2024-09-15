@@ -2,7 +2,7 @@ const ExcelJS = require("exceljs/dist/es5");
 const fs = require("fs");
 const path = require("path");
 
-const { formatDate, formatDateStr } = require("./date");
+const { formatDate, formatDateStr, compareDate } = require("./date");
 
 const fileDir = path.join(__dirname, "../cache/excelFiles");
 const dataDir = path.join(__dirname, "../cache/handledData");
@@ -19,21 +19,31 @@ const init = async () => {
     const workbook = new ExcelJS.Workbook();
     return workbook.xlsx.readFile(path.join(fileDir, fileName)).then(() => {
       const worksheet = workbook.getWorksheet(1);
+      console.log(fileName);
       worksheet.eachRow((row, rowNumber) => {
         const [, day, , cnName, , , , , , , value] = row.values;
         if (cnName.includes("指数中文全称")) return;
         if (!allData[cnName]) {
-          allData[cnName] = [];
+          allData[cnName] = {};
         }
-        allData[cnName].push({
-          date: formatDateStr(day),
-          value: Number(value),
-        });
+        allData[cnName][formatDateStr(day)] = Number(value);
       });
     });
   });
   await Promise.all(allPros);
-
+  Object.keys(allData).forEach((id) => {
+    const values = [];
+    const dateList = Object.keys(allData[id]).sort((a, b) =>
+      compareDate(a, b) ? -1 : 1
+    );
+    dateList.forEach((date) => {
+      values.push({
+        date,
+        value: allData[id][date],
+      });
+    });
+    allData[id] = values;
+  });
   updateCache(allData);
 };
 
@@ -59,16 +69,6 @@ const getCache = (id) => {
   return [];
 };
 
-const combineDataList = (originDataList, updatedDataList) => {
-  const combinedData = {};
-  originDataList.forEach((obj) => (combinedData[obj.date] = value));
-  updatedDataList.forEach((obj) => (combinedData[obj.date] = value));
-  return Object.keys(combinedData).map((date) => ({
-    date,
-    value: combinedData[date],
-  }));
-};
-
 const updateCache = async (jsonData) => {
   if (!fs.existsSync(fileJsonPath)) {
     throw new Error(fileJsonPath + "不存在");
@@ -81,7 +81,7 @@ const updateCache = async (jsonData) => {
   }
   const lastRequest = originalData[LAST_REQUEST] || {};
   Object.keys(jsonData).forEach((fundId) => {
-    if (fundId == LAST_REQUEST) {
+    if (fundId == LAST_REQUEST || !jsonData[fundId].length) {
       return;
     }
     if (!originalData[fundId]) {
@@ -89,10 +89,14 @@ const updateCache = async (jsonData) => {
       return;
     }
     if (originalData[fundId].length != jsonData[fundId].length) {
-      originalData[fundId] = combineDataList(
-        originalData[fundId],
-        jsonData[fundId]
+      console.log(
+        fundId,
+        "update: from ",
+        originalData[fundId].length,
+        "to ",
+        jsonData[fundId].length
       );
+      originalData[fundId] = jsonData[fundId];
       return;
     }
     console.log(fundId, "cache the same");
