@@ -1,155 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="../resource/jquery.js"></script>
     <script src="../resource/echarts.min.js"></script>
     <script src="../scripts/funds.js"></script>
     <title>Charts</title>
-</head>
+  </head>
 
-<body>
-    <div id="main" style="width: 80%;height:50%;min-height: 500px;"></div>
+  <body>
+    <div id="main" style="width: 80%; height: 50%; min-height: 500px"></div>
 
     <script type="text/javascript">
-        const compareDate = (a, b) => {
-            const aList = a.split('-');
-            const bList = b.split('-');
-            return aList.every((_, index) => Number(aList[index]) >= Number(bList[index]));
-        };
-        const similarDate = (a, b) => {
-            const aList = a.split('-');
-            const bList = b.split('-');
-            return aList[0] == bList[0] && aList[1] == bList[1] && Math.abs(aList[2] - bList[2]) <= 10;
-        };
-        const initDom = () => {
-            console.log('start render');
-            const allFunds = {};
-            Object.keys(funds).forEach(id => {
-                let apiUrl = `http://localhost:3000/getFund?id=${id}`;
-                const values = fetch(apiUrl)
-                    .then((response) => response.text())
-                    .then((data) => {
-                        const values = JSON.parse(data);
-                        allFunds[id] = values;
-                    });
+      const compareDate = (a, b) => {
+        const aList = a.split("-");
+        const bList = b.split("-");
+        return aList.every(
+          (_, index) => Number(aList[index]) >= Number(bList[index])
+        );
+      };
+      const similarDate = (a, b) => {
+        const aList = a.split("-");
+        const bList = b.split("-");
+        return (
+          aList[0] == bList[0] &&
+          aList[1] == bList[1] &&
+          Math.abs(aList[2] - bList[2]) <= 10
+        );
+      };
+      const initDom = () => {
+        console.log("start render");
+        const allFunds = {};
+        Object.keys(funds).forEach((id) => {
+          let apiUrl = `http://localhost:3000/getFund?id=${id}`;
+          const values = fetch(apiUrl)
+            .then((response) => response.text())
+            .then((data) => {
+              const values = JSON.parse(data);
+              allFunds[id] = values;
             });
+        });
 
-            setTimeout(() => {
-                const mainChart = echarts.init(document.getElementById('main'));
-                const formatDay = day => `${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
+        setTimeout(() => {
+          const mainChart = echarts.init(document.getElementById("main"));
+          const formatDay = (day) =>
+            `${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(
+              6,
+              8
+            )}`;
 
-                const startDay = '2015-8-28';
-                const recountAllFunds = {};
-                Object.keys(allFunds).map(id => {
-                    const values = allFunds[id].filter(obj => compareDate(obj.date, startDay));
-                    if (values.length == 0) return [];
-                    const firstValue = values[0];
-                    const recountValues = values.map(obj => ({
-                        date: obj.date,
-                        value: Number((obj.value / firstValue.value).toFixed(4))
-                    }));
-                    recountAllFunds[id] = recountValues;
-                });
-                const series = Object.keys(recountAllFunds).map(id => {
-                    return {
-                        name: funds[id].name,
-                        type: 'line',
-                        showSymbol: false,
-                        data: recountAllFunds[id].map(obj => {
-                            return [obj.date, obj.value];
-                        })
-                    };
-                });
-                const avg = {
-                    name: 'AVG',
-                    type: 'line',
-                    showSymbol: false,
-                    data: []
-                };
-                const fundsNames = [
-                    "中证A50全收益指数",
-                    "中证东方红红利低波动全收益指数",
-                ];
-                let startValue = 0;
-                recountAllFunds[fundsNames[0]].filter(obj => compareDate(obj.date, startDay)).forEach(obj => {
-                    const allValues = (fundsNames.map(fundName => (recountAllFunds[fundName].find(f => f.date == obj.date) || { value: 0 }).value)).filter(v => v > 0);
-                    const currentValue = Number((allValues.reduce((s, pv) => s += pv, 0) / allValues.length).toFixed(4));
-                    if (!startValue) {
-                        startValue = currentValue;
-                    }
-                    avg.data.push([obj.date, Number((currentValue / startValue).toFixed(4))]);
-                });
-                series.push(avg);
-                const defaultSelectedLegends = {
-                    'AVG': true
-                };
-                if (fundsNames.length != 0) {
-                    Object.keys(recountAllFunds).forEach(fundName => defaultSelectedLegends[fundName] = false);
-                    Object.keys(funds).forEach(id => defaultSelectedLegends[funds[id].name] = false);
-                    fundsNames.forEach(fundName => defaultSelectedLegends[fundName] = true);
-                }
+          const startDay = "2015-8-28";
+          const recountAllFunds = {};
+          Object.keys(allFunds).map((id) => {
+            const values = allFunds[id].filter((obj) =>
+              compareDate(obj.date, startDay)
+            );
+            if (values.length == 0) return [];
+            const firstValue = values[0];
+            const recountValues = values.map((obj) => ({
+              date: obj.date,
+              value: Number((obj.value / firstValue.value).toFixed(4)),
+            }));
+            recountAllFunds[id] = recountValues;
+          });
+          const series = Object.keys(recountAllFunds).map((id) => {
+            return {
+              name: funds[id].name,
+              type: "line",
+              showSymbol: false,
+              data: recountAllFunds[id].map((obj) => {
+                return [obj.date, obj.value];
+              }),
+            };
+          });
+          const avg = {
+            name: "AVG",
+            type: "line",
+            showSymbol: false,
+            data: [],
+          };
+          const fundsNames = [
+            "中证A50全收益指数",
+            "中证东方红红利低波动全收益指数",
+          ];
+          let startValue = 0;
+          recountAllFunds[fundsNames[0]]
+            .filter((obj) => compareDate(obj.date, startDay))
+            .forEach((obj) => {
+              const allValues = fundsNames
+                .map(
+                  (fundName) =>
+                    (
+                      recountAllFunds[fundName].find(
+                        (f) => f.date == obj.date
+                      ) || { value: 0 }
+                    ).value
+                )
+                .filter((v) => v > 0);
+              const currentValue = Number(
+                (
+                  allValues.reduce((s, pv) => (s += pv), 0) / allValues.length
+                ).toFixed(4)
+              );
+              if (!startValue) {
+                startValue = currentValue;
+              }
+              avg.data.push([
+                obj.date,
+                Number((currentValue / startValue).toFixed(4)),
+              ]);
+            });
+          series.push(avg);
+          const defaultSelectedLegends = {
+            AVG: true,
+          };
+          if (fundsNames.length != 0) {
+            Object.keys(recountAllFunds).forEach(
+              (fundName) => (defaultSelectedLegends[fundName] = false)
+            );
+            Object.keys(funds).forEach(
+              (id) => (defaultSelectedLegends[funds[id].name] = false)
+            );
+            fundsNames.forEach(
+              (fundName) => (defaultSelectedLegends[fundName] = true)
+            );
+          }
 
-                const option = {
-                    title: {
-                        text: '净值百分比'
-                    },
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    legend: {
-                        data: Object.values(funds).map(fund => fund.name).concat(['AVG']),
-                        selected: defaultSelectedLegends
-                    },
-                    grid: {
-                        left: '3%',
-                        right: '4%',
-                        bottom: '3%',
-                        containLabel: true
-                    },
-                    toolbox: {
-                        feature: {
-                            saveAsImage: {}
-                        }
-                    },
-                    xAxis: {
-                        type: 'time',
-                        splitLine: {
-                            show: false
-                        }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        boundaryGap: [0, '100%'],
-                        splitLine: {
-                            show: false
-                        }
-                    },
-                    dataZoom: [
-                        {
-                            type: 'slider', // 使用滑块类型
-                            start: 0, // 初始化滑块开始位置（百分比）
-                            end: 100, // 初始化滑块结束位置（百分比）
-                            handleSize: '80%', // 滑块手柄的大小
-                            handleStyle: {
-                                color: '#000',
-                                shadowBlur: 3,
-                                shadowColor: 'rgba(0, 0, 0, 0.6)',
-                                shadowOffsetX: 2,
-                                shadowOffsetY: 2
-                            }
-                        }
-                    ],
-                    series
-                };
-                mainChart.setOption(option);
-            }, 1000);
-        };
+          const option = {
+            title: {
+              text: "净值百分比",
+            },
+            tooltip: {
+              trigger: "axis",
+            },
+            legend: {
+              data: Object.values(funds)
+                .map((fund) => fund.name)
+                .concat(["AVG"]),
+              selected: defaultSelectedLegends,
+            },
+            grid: {
+              left: "3%",
+              right: "4%",
+              bottom: "3%",
+              containLabel: true,
+            },
+            toolbox: {
+              feature: {
+                saveAsImage: {},
+              },
+            },
+            xAxis: {
+              type: "time",
+              splitLine: {
+                show: false,
+              },
+            },
+            yAxis: {
+              type: "value",
+              boundaryGap: [0, "100%"],
+              splitLine: {
+                show: false,
+              },
+            },
+            dataZoom: [
+              {
+                type: "slider", // 使用滑块类型
+                start: 0, // 初始化滑块开始位置（百分比）
+                end: 100, // 初始化滑块结束位置（百分比）
+                handleSize: "80%", // 滑块手柄的大小
+                handleStyle: {
+                  color: "#000",
+                  shadowBlur: 3,
+                  shadowColor: "rgba(0, 0, 0, 0.6)",
+                  shadowOffsetX: 2,
+                  shadowOffsetY: 2,
+                },
+              },
+            ],
+            series,
+          };
+          mainChart.setOption(option);
+        }, 1000);
+      };
 
-        setTimeout(initDom, 500);
+      setTimeout(initDom, 500);
     </script>
-</body>
-
+  </body>
 </html>

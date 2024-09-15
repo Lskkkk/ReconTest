@@ -27,7 +27,7 @@ const init = async () => {
         }
         allData[cnName].push({
           date: formatDateStr(day),
-          value: Number(value)
+          value: Number(value),
         });
       });
     });
@@ -59,6 +59,16 @@ const getCache = (id) => {
   return [];
 };
 
+const combineDataList = (originDataList, updatedDataList) => {
+  const combinedData = {};
+  originDataList.forEach((obj) => (combinedData[obj.date] = value));
+  updatedDataList.forEach((obj) => (combinedData[obj.date] = value));
+  return Object.keys(combinedData).map((date) => ({
+    date,
+    value: combinedData[date],
+  }));
+};
+
 const updateCache = async (jsonData) => {
   if (!fs.existsSync(fileJsonPath)) {
     throw new Error(fileJsonPath + "不存在");
@@ -78,11 +88,11 @@ const updateCache = async (jsonData) => {
       originalData[fundId] = jsonData[fundId];
       return;
     }
-    if (
-      originalData[fundId].length <
-      jsonData[fundId].length
-    ) {
-      originalData[fundId] = jsonData[fundId];
+    if (originalData[fundId].length != jsonData[fundId].length) {
+      originalData[fundId] = combineDataList(
+        originalData[fundId],
+        jsonData[fundId]
+      );
       return;
     }
     console.log(fundId, "cache the same");
@@ -101,7 +111,7 @@ const getCacheFundExtraOptions = () => {
     console.log(error);
   }
   if (Object.keys(originalData).length > 0) {
-    return Object.keys(originalData).filter(key => key.includes('全收益'));
+    return Object.keys(originalData).filter((key) => key.includes("全收益"));
   }
   return [];
 };
