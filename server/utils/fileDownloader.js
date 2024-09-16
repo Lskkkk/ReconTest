@@ -88,7 +88,9 @@ const exportData = async () => {
 };
 
 const removeBlock = async () => {
-  await page.$eval('#waf_nc_block', el => el.remove());
+  if (await page.$('#waf_nc_block')) {
+    await page.$eval('#waf_nc_block', el => el.remove());
+  }
 };
 
 const openPages = async (url) => {
@@ -119,7 +121,12 @@ const renameDownloadedFiles = async () => {
     const fundId = fileName.match(/^(\d+)perf.*/)[1];
     const dateNow = formatDate(new Date());
     const newFileName = fundId + '+' + dateNow + '.xlsx';
-    fs.renameSync(downloadPath + '/' + fileName, excelPath + '/' + newFileName);
+    const originPath = downloadPath + '/' + fileName;
+    const targetPath = excelPath + '/' + newFileName;
+    if (fs.existsSync(targetPath)) {
+      fs.unlinkSync(targetPath);
+    }
+    fs.renameSync(originPath, targetPath);
   });
 };
 
