@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "cacheHandler": "node ./server/utils/cacheHandler.js",
-    "start": "node ./server/utils/openHtml.js && npm run cacheHandler && nodemon ./server/index.js",
+    "fileDownloader": "node ./server/utils/fileDownloader.js",
+    "data": "npm run fileDownloader && npm run cacheHandler",
+    "start": "nodemon ./server/index.js",
     "save": "git add .; git commit -m 'save'; git push"
   },
   "author": "",

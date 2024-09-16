@@ -22,7 +22,7 @@ const init = async () => {
       console.log(fileName);
       worksheet.eachRow((row, rowNumber) => {
         const [, day, , cnName, , , , , , , value] = row.values;
-        if (cnName.includes("指数中文全称")) return;
+        if (!cnName.includes("全收益")) return;
         if (!allData[cnName]) {
           allData[cnName] = {};
         }
