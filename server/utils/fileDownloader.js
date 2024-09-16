@@ -5,6 +5,7 @@ const { formatDate } = require("./date");
 
 const links = [
   "https://www.csindex.com.cn/#/indices/family/detail?indexCode=931446", // 东证红利低波
+  "https://www.csindex.com.cn/#/indices/family/detail?indexCode=930050", // A50
 ];
 
 let page;
@@ -93,9 +94,25 @@ const removeBlock = async () => {
   }
 };
 
+const selectAllProfit = async () => {
+  const ele = await page.$('.ivu-select-placeholder');
+  await ele.click();
+  const options = await page.$$('.ivu-select-item');
+  if (options.length > 0) {
+    for await (let op of options) {
+      const textContent = await op.evaluate(node => node.textContent);
+      if (textContent.includes("全收益")) {
+        console.log(textContent);
+        await op.click();
+      }
+    }
+  }
+};
+
 const openPages = async (url) => {
   await page.goto(url);
   await _wait(removeBlock, 1000);
+  await _wait(selectAllProfit, 1000);
   await _wait(selectYear, 1000);
   await _wait(exportData, 1000);
 };
@@ -150,9 +167,11 @@ const renameDownloadedFiles = async () => {
     height: 1080,
     deviceScaleFactor: 1,
   });
-  await openPages(links[0]);
+  for await (let link of links) {
+    await _wait(() => openPages(link), 5000);
+  }
   await _wait(async () => {
     renameDownloadedFiles();
     await browser.close();
-  }, 12000);
+  }, 10000);
 })();
