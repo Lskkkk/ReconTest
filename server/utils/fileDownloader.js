@@ -2,10 +2,12 @@ const path = require('path');
 const fs = require('fs');
 const puppeteer = require('puppeteer');
 const { formatDate } = require('./date');
+const { isFundNameValid } = require('./fundName');
 
 const links = [
 	'https://www.csindex.com.cn/#/indices/family/detail?indexCode=931446', // 东证红利低波
 	'https://www.csindex.com.cn/#/indices/family/detail?indexCode=930050', // A50
+	'https://www.csindex.com.cn/#/indices/family/detail?indexCode=000001', // 上证指数
 ];
 
 let page;
@@ -108,7 +110,7 @@ const selectAllProfit = async () => {
 	if (options.length > 0) {
 		for await (let op of options) {
 			const textContent = await op.evaluate(node => node.textContent);
-			if (textContent.includes('全收益')) {
+			if (isFundNameValid(textContent)) {
 				console.log(textContent);
 				await op.click();
 			}
