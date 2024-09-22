@@ -1,4 +1,7 @@
 const nowYear = new Date().getFullYear();
+
+let szValues = [];
+
 const initDom = () => {
 	console.log('start render');
 	const fundEle = $('#fund-selector');
@@ -283,8 +286,6 @@ const initDom = () => {
 };
 setTimeout(initDom, 500);
 
-const formatDate = d => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-
 function maxDifference(arr) {
 	if (arr.length < 2) {
 		return 0;
@@ -339,6 +340,8 @@ const getMonthValues = dayValues => {
 	return monthValues;
 };
 
+fetchOne('上证综合指数').then(data => (szValues = data || []));
+
 const recon = (
 	values,
 	showLog,
@@ -368,6 +371,7 @@ const recon = (
 	let winCount = 0;
 	let winCountTotal = 0;
 	let lastBuyDate = '';
+	let rightSzValues = isMonth ? getMonthValues(szValues) : szValues;
 	values.forEach((obj, index) => {
 		if (obj.date.substring(0, 4) < String(startYear)) return;
 		const currentValue = obj.value;
@@ -398,25 +402,30 @@ const recon = (
 		}
 		recordStartValue = Math.max(recordStartValue, currentValue);
 		let buyM = oneFieldMoney;
-		if (totalMoney >= buyM && recordStartValue * buyRate >= currentValue) {
-			const buyObj = isMonth ? values[index] : values[index + 1];
-			const rateWrapper = isMonth ? 1 : 1;
-			if (rate < rateWrapper && buyObj) {
-				const buyValue = buyObj.value;
-				const field = buyM / buyValue;
-				costValue = (costValue * totalField + buyM) / (totalField + field);
-				totalField += field;
-				totalMoney -= buyM;
-				showLog &&
-					console.log(
-						`[B] ${obj.date}: `,
-						Math.floor(totalMoney),
-						currentValue,
-						costValue,
-						(currentValue / costValue - 1).toFixed(3)
-					);
-				lastBuyDate = buyObj.date;
-			}
+		const buyObj = isMonth ? values[index] : values[index + 1];
+		const rateWrapper = isMonth ? 1.02 : 1;
+		const szVal = rightSzValues.find(v => v.date == obj.date);
+		if (
+			totalMoney >= buyM &&
+			recordStartValue * buyRate >= currentValue &&
+			rate < rateWrapper &&
+			buyObj &&
+			(id.includes('沪深300') && szVal ? szVal.value <= 3000 : true)
+		) {
+			const buyValue = buyObj.value;
+			const field = buyM / buyValue;
+			costValue = (costValue * totalField + buyM) / (totalField + field);
+			totalField += field;
+			totalMoney -= buyM;
+			showLog &&
+				console.log(
+					`[B] ${obj.date}: `,
+					Math.floor(totalMoney),
+					currentValue,
+					costValue,
+					(currentValue / costValue - 1).toFixed(3)
+				);
+			lastBuyDate = buyObj.date;
 		}
 		if (totalField < 0 || totalMoney < 0) {
 			console.error(`err ${obj.date}:`, totalMoney, totalField, currentValue, currentValue);
