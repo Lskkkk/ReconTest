@@ -248,9 +248,9 @@ const initDom = () => {
 						'\nnow:  ' + currentValue.date,
 						'currentValue: ' + currentValue.value.toFixed(3),
 						'currentLost: ' +
-						(costValue == 0
-							? 0
-							: ((currentValue.value - costValue) / costValue).toFixed(3)),
+							(costValue == 0
+								? 0
+								: ((currentValue.value - costValue) / costValue).toFixed(3)),
 						'\nprogress: ' + progress,
 					].join('|');
 					if (isMonth) {
@@ -263,10 +263,21 @@ const initDom = () => {
 			}
 		});
 		setTimeout(() => {
-			console.log('***************** day *****************');
-			day_logs.forEach(d => console.log(...d.split('|')));
-			console.log('**************** month: 20号之后才考虑 ****************');
-			month_logs.forEach(d => console.log(...d.split('|')));
+			Object.keys(funds).forEach(id => {
+				console.log(
+					'******************************************************************************************************'
+				);
+				day_logs.forEach(d => {
+					if (d.includes(funds[id].name)) {
+						console.log(...d.split('|'));
+					}
+				});
+				month_logs.forEach(d => {
+					if (d.includes(funds[id].name)) {
+						console.log(...d.split('|'));
+					}
+				});
+			});
 		}, 1000);
 	});
 };
