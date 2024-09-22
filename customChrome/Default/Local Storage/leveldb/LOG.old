@@ -1,3 +1,5 @@
-2024/09/17-08:55:28.668 1988 Reusing MANIFEST C:\Users\Lsk-pc2\Documents\Code\ReconTest\customChrome\Default\Local Storage\leveldb/MANIFEST-000001
-2024/09/17-08:55:28.672 1988 Recovering log #3
-2024/09/17-08:55:28.675 1988 Reusing old log C:\Users\Lsk-pc2\Documents\Code\ReconTest\customChrome\Default\Local Storage\leveldb/000003.log 
+2024/09/17-09:20:28.663 2518 Reusing MANIFEST C:\Users\Lsk-pc2\Documents\Code\ReconTest\customChrome\Default\Local Storage\leveldb/MANIFEST-000001
+2024/09/17-09:20:28.668 2518 Recovering log #3
+2024/09/17-09:20:28.669 2518 Level-0 table #3: started
+2024/09/17-09:20:28.674 2518 Level-0 table #3: 21348 bytes OK
+2024/09/17-09:20:28.677 2518 Delete type=0 #3
