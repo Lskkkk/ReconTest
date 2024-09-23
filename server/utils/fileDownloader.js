@@ -121,7 +121,9 @@ const selectAllProfit = async () => {
 const openPages = async url => {
 	await page.goto(url);
 	await _wait(removeBlock, 1000);
-	await _wait(selectAllProfit, 1000);
+	if (!url.includes('000001')) {
+		await _wait(selectAllProfit, 1000);
+	}
 	await _wait(selectYear, 1000);
 	await _wait(exportData, 1000);
 };
