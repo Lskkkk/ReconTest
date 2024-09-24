@@ -51,6 +51,7 @@ const readFunds = async () => {
     let extraOptions = await getFundExtraOptions();
     if (extraOptions) {
         extraOptions = JSON.parse(extraOptions);
+        console.log(extraOptions);
         extraOptions.forEach(op => {
             if (!funds[op]) {
                 funds[op] = {

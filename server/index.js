@@ -9,14 +9,7 @@ const { getGuiCache, setGuiCache } = require('./utils/cacheHandler');
 const app = new Koa();
 
 app.use(
-	cors({
-		origin: '*',
-		allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-		allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
-		exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
-		credentials: true,
-		maxAge: 10,
-	})
+	cors()
 );
 
 router
