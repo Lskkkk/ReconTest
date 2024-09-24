@@ -45,8 +45,9 @@
 					const formatDay = day =>
 						`${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
 
-					const startDay = '2012-8-28';
-					const showRate = false;
+					const startDay = '2015-8-31';
+					const showRate = true;
+					const showAll = false; // 展示包括ETF
 					const recountAllFunds = {};
 
 					Object.keys(allFunds).map(id => {
@@ -63,16 +64,18 @@
 							recountAllFunds[id] = values;
 						}
 					});
-					const series = Object.keys(recountAllFunds).map(id => {
-						return {
-							name: funds[id].name,
-							type: 'line',
-							showSymbol: false,
-							data: recountAllFunds[id].map(obj => {
-								return [obj.date, obj.value];
-							}),
-						};
-					});
+					const series = Object.keys(recountAllFunds)
+						.map(id => {
+							return {
+								name: funds[id].name,
+								type: 'line',
+								showSymbol: false,
+								data: recountAllFunds[id].map(obj => {
+									return [obj.date, obj.value];
+								}),
+							};
+						})
+						.filter(obj => obj.name.includes('收益') || showAll);
 					const avg = {
 						name: 'AVG',
 						type: 'line',
@@ -135,6 +138,7 @@
 						legend: {
 							data: Object.values(funds)
 								.map(fund => fund.name)
+								.filter(name => name.includes('收益') || showAll)
 								.concat(['AVG']),
 							selected: defaultSelectedLegends,
 						},
@@ -155,6 +159,7 @@
 							splitLine: {
 								show: false,
 							},
+							interval: 3600 * 1000 * 24 * 7,
 						},
 						yAxis: {
 							type: 'value',

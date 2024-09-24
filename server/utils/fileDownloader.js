@@ -2,7 +2,6 @@ const path = require('path');
 const fs = require('fs');
 const puppeteer = require('puppeteer');
 const { formatDate } = require('./date');
-const { isFundNameValid } = require('./fundName');
 
 const links = [
 	{
