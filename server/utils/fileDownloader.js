@@ -5,9 +5,22 @@ const { formatDate } = require('./date');
 const { isFundNameValid } = require('./fundName');
 
 const links = [
-	'https://www.csindex.com.cn/#/indices/family/detail?indexCode=931446', // 东证红利低波
-	'https://www.csindex.com.cn/#/indices/family/detail?indexCode=930050', // A50
-	'https://www.csindex.com.cn/#/indices/family/detail?indexCode=000001', // 上证指数
+	{
+		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=931446',
+		matchName: '东证红利低波全收益'
+	},
+	{
+		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=930050',
+		matchName: '中证A50全收益'
+	},
+	{
+		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=000001',
+		matchName: ''
+	},
+	{
+		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=000300',
+		matchName: '300收益'
+	}
 ];
 
 let page;
@@ -103,14 +116,17 @@ const removeBlock = async () => {
 	}
 };
 
-const selectAllProfit = async () => {
+const selectAllProfit = async (matchName) => {
+	if (!matchName) {
+		return;
+	}
 	const ele = await page.$('.ivu-select-placeholder');
 	await ele.click();
 	const options = await page.$$('.ivu-select-item');
 	if (options.length > 0) {
 		for await (let op of options) {
-			const textContent = await op.evaluate(node => node.textContent);
-			if (isFundNameValid(textContent)) {
+			const textContent = (await op.evaluate(node => node.textContent)).trim();
+			if (matchName == textContent) {
 				console.log(textContent);
 				await op.click();
 			}
@@ -118,12 +134,10 @@ const selectAllProfit = async () => {
 	}
 };
 
-const openPages = async url => {
+const openPages = async (url, matchName) => {
 	await page.goto(url);
 	await _wait(removeBlock, 1000);
-	if (!url.includes('000001')) {
-		await _wait(selectAllProfit, 1000);
-	}
+	await _wait(() => selectAllProfit(matchName), 1000);
 	await _wait(selectYear, 1000);
 	await _wait(exportData, 1000);
 };
@@ -179,7 +193,7 @@ const renameDownloadedFiles = async () => {
 		deviceScaleFactor: 1,
 	});
 	for await (let link of links) {
-		await _wait(() => openPages(link), 5000);
+		await _wait(() => openPages(link.url, link.matchName), 5000);
 	}
 	await _wait(async () => {
 		renameDownloadedFiles();
