@@ -6,7 +6,9 @@ const { isFundNameValid } = require('./fundName');
 const fetchFundByApi = async (id, forceUpdate = false) => {
 	if (!forceUpdate || isFundNameValid(id)) {
 		const cacheData = getCache(id);
-		return cacheData;
+		if (cacheData.length > 0) {
+			return cacheData;
+		}
 	} else {
 		console.log(id, 'forceUpdate');
 	}
