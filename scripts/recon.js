@@ -418,8 +418,8 @@ const recon = (
 			totalMoney >= buyM &&
 			recordStartValue * buyRate >= currentValue &&
 			rate < rateWrapper &&
-			buyObj &&
-			(id.includes('沪深300') && szVal ? szVal.value <= 3000 : true)
+			buyObj
+			// (id.includes('沪深300') && szVal ? szVal.value <= 3000 : true) // 先去掉，不可能一直3000点
 		) {
 			const buyValue = buyObj.value;
 			const field = buyM / buyValue;
@@ -450,11 +450,22 @@ const recon = (
 
 			maxReturnValue = Math.max(maxReturnValue, currentValue);
 			const currentReturn = Number(((maxReturnValue - currentValue) / maxReturnValue).toFixed(3));
-			if (showLog && periodReturn !== Math.max(periodReturn, currentReturn)) {
-				console.log('periodReturn', -Math.max(periodReturn, currentReturn), maxReturnValue, currentValue, obj.date)
-			}
+			// if (showLog && periodReturn !== Math.max(periodReturn, currentReturn)) {
+			// 	console.log('periodReturn', obj.date, -Math.max(periodReturn, currentReturn), maxReturnValue, currentValue, " profitRate: ", (currentValue / costValue - 1).toFixed(3));
+			// }
 			periodReturn = Math.max(periodReturn, currentReturn);
 			maxReturn = Math.max(periodReturn, maxReturn);
+
+			if (showLog && isMonth) {
+				console.log(
+					'Month: ',
+					obj.date,
+					currentValue.toFixed(3),
+					costValue.toFixed(3),
+					'win: ' + ((currentValue - costValue) / costValue).toFixed(3),
+					-periodReturn
+				);
+			}
 		}
 	});
 	const finalMoney = totalMoney + totalField * endValue;
