@@ -4,13 +4,14 @@ const { getCache, updateCache } = require('./cacheHandler');
 const { isFundNameValid } = require('./fundName');
 
 const fetchFundByApi = async (id, forceUpdate = false) => {
-	if (!forceUpdate || isFundNameValid(id)) {
+	if (isFundNameValid(id)) {
+		return getCache(id);
+	}
+	if (!forceUpdate) {
 		const cacheData = getCache(id);
 		if (cacheData.length > 0) {
 			return cacheData;
 		}
-	} else {
-		console.log(id, 'forceUpdate');
 	}
 
 	const response = await axios.get(`https://fund.eastmoney.com/pingzhongdata/${id}.js`);

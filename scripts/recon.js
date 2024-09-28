@@ -27,6 +27,7 @@ const initDom = () => {
 	for (let i = 1.05; i <= 5.2; i += i < 2 ? 0.02 : 0.5) {
 		saleEle.append(`<option value="${i.toFixed(2)}">${i.toFixed(2)}</option>`);
 	}
+	saleEle.append(`<option value="100">${"100"}</option>`);
 	for (let i = 100000; i >= 10000; i -= 10000) {
 		startMoneyEle.append(`<option value="${i}">${i}</option>`);
 	}
@@ -366,7 +367,7 @@ const recon = (
 	let totalField = 0;
 	let maxLost = 0,
 		periodLost = 0;
-	let maxReturnValue = 0, maxReturn = 0;
+	let maxReturnValue = 0, maxReturn = 0, periodReturn = 0;
 	const profit = {};
 	const endValue = values[values.length - 1].value;
 	let recordStartValue = 0;
@@ -399,12 +400,14 @@ const recon = (
 					costValue,
 					periodLost.toFixed(3),
 					recordStartValue,
-					-maxReturn
+					-periodReturn
 				);
 			recordStartValue = currentValue;
+			maxReturnValue = 0;
 			costValue = totalField == 0 ? 0 : costValue;
 			totalMoney = startMoney;
 			periodLost = 0;
+			periodReturn = 0;
 		}
 		recordStartValue = Math.max(recordStartValue, currentValue);
 		let buyM = oneFieldMoney;
@@ -438,8 +441,8 @@ const recon = (
 		}
 		if (totalField > 0) {
 			const currentLost = currentValue / costValue - 1;
-			maxLost = Math.min(currentLost, maxLost);
 			periodLost = Math.min(currentLost, periodLost);
+			maxLost = Math.min(periodLost, maxLost);
 			if (currentLost > 0) {
 				winCount++;
 			}
@@ -447,7 +450,11 @@ const recon = (
 
 			maxReturnValue = Math.max(maxReturnValue, currentValue);
 			const currentReturn = Number(((maxReturnValue - currentValue) / maxReturnValue).toFixed(3));
-			maxReturn = Math.max(maxReturn, currentReturn);
+			if (showLog && periodReturn !== Math.max(periodReturn, currentReturn)) {
+				console.log('periodReturn', -Math.max(periodReturn, currentReturn), maxReturnValue, currentValue, obj.date)
+			}
+			periodReturn = Math.max(periodReturn, currentReturn);
+			maxReturn = Math.max(periodReturn, maxReturn);
 		}
 	});
 	const finalMoney = totalMoney + totalField * endValue;
@@ -461,6 +468,7 @@ const recon = (
 			((endValue - costValue) / costValue).toFixed(3),
 			maxLost.toFixed(3),
 			totalProfit,
+			-periodReturn,
 			-maxReturn
 		);
 	showLog && console.log('profit: ', profit, totalProfit);
@@ -554,7 +562,7 @@ const searching = (
 	results.sort((a, b) => b.profit - a.profit);
 	window._results = results;
 	results = results
-		.filter(r => r.maxLost >= -0.2 && r.maxReturn <= 0.2 && r.winRate >= Number(_winRate) && r.years >= winYears)
+		.filter(r => r.maxLost >= -0.2 && r.winRate >= Number(_winRate) && r.years >= winYears)
 		.slice(0, 10)
 		.reverse();
 	results.forEach(r => {
