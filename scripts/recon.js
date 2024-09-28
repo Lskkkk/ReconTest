@@ -398,7 +398,8 @@ const recon = (
 					currentValue,
 					costValue,
 					periodLost.toFixed(3),
-					recordStartValue
+					recordStartValue,
+					-maxReturn
 				);
 			recordStartValue = currentValue;
 			costValue = totalField == 0 ? 0 : costValue;
@@ -516,7 +517,7 @@ const searching = (
 				oneMoney <= (isMonth ? startMoney / 4 : startMoney / 10);
 				oneMoney += oneMoney >= 10000 ? 5000 : 500
 			) {
-				const [current, finalMoney, maxLost, winRate] = recon(
+				const [current, finalMoney, maxLost, winRate, , , , maxReturn] = recon(
 					values,
 					false,
 					id,
@@ -533,6 +534,7 @@ const searching = (
 				results.push({
 					profit: curPro,
 					maxLost,
+					maxReturn,
 					years,
 					winRate,
 					saleRate,
@@ -543,7 +545,7 @@ const searching = (
 						2
 					)}, ${saleRate.toFixed(2)}, ${oneMoney}, ${curPro}, ${maxLost.toFixed(
 						3
-					)}, ${winRate}, ${proGap}`,
+					)}, ${-maxReturn},${winRate}, ${proGap}`,
 				});
 			}
 		}
@@ -552,7 +554,7 @@ const searching = (
 	results.sort((a, b) => b.profit - a.profit);
 	window._results = results;
 	results = results
-		.filter(r => r.maxLost >= -0.2 && r.winRate >= Number(_winRate) && r.years >= winYears)
+		.filter(r => r.maxLost >= -0.2 && r.maxReturn <= 0.2 && r.winRate >= Number(_winRate) && r.years >= winYears)
 		.slice(0, 10)
 		.reverse();
 	results.forEach(r => {
