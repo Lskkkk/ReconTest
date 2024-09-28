@@ -450,9 +450,6 @@ const recon = (
 
 			maxReturnValue = Math.max(maxReturnValue, currentValue);
 			const currentReturn = Number(((maxReturnValue - currentValue) / maxReturnValue).toFixed(3));
-			// if (showLog && periodReturn !== Math.max(periodReturn, currentReturn)) {
-			// 	console.log('periodReturn', obj.date, -Math.max(periodReturn, currentReturn), maxReturnValue, currentValue, " profitRate: ", (currentValue / costValue - 1).toFixed(3));
-			// }
 			periodReturn = Math.max(periodReturn, currentReturn);
 			maxReturn = Math.max(periodReturn, maxReturn);
 
