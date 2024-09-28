@@ -228,7 +228,7 @@ const initDom = () => {
 					const originalValues = await fetchOne(id);
 					const isMonth = str[5] == 'month';
 					let values = isMonth ? getMonthValues(originalValues) : originalValues;
-					const [profit, , maxLost, winRate, progress, costValue, lastBuyDate] = recon(
+					const [profit, , maxLost, winRate, progress, costValue, lastBuyDate, maxReturn] = recon(
 						values,
 						false,
 						id,
@@ -248,6 +248,7 @@ const initDom = () => {
 						'\nlast: ' + lastBuyDate + (isMonth ? ' ' : ''),
 						'costValue:    ' + costValue.toFixed(3),
 						'maxLost:     ' + maxLost.toFixed(3),
+						'maxReturn:   ' + -maxReturn,
 						'\nnow:  ' + currentValue.date,
 						'currentValue: ' + currentValue.value.toFixed(3),
 						'currentLost: ' +
@@ -365,9 +366,10 @@ const recon = (
 	let totalField = 0;
 	let maxLost = 0,
 		periodLost = 0;
+	let maxReturnValue = 0, maxReturn = 0;
 	const profit = {};
 	const endValue = values[values.length - 1].value;
-	let recordStartValue = startValue;
+	let recordStartValue = 0;
 	let winCount = 0;
 	let winCountTotal = 0;
 	let lastBuyDate = '';
@@ -375,6 +377,9 @@ const recon = (
 	values.forEach((obj, index) => {
 		if (obj.date.substring(0, 4) < String(startYear)) return;
 		const currentValue = obj.value;
+		if (!recordStartValue) {
+			recordStartValue = currentValue;
+		}
 		const rate = costValue > 0 ? currentValue / costValue : 0;
 
 		if (totalField > 0 && rate >= saleRate) {
@@ -438,6 +443,10 @@ const recon = (
 				winCount++;
 			}
 			winCountTotal++;
+
+			maxReturnValue = Math.max(maxReturnValue, currentValue);
+			const currentReturn = Number(((maxReturnValue - currentValue) / maxReturnValue).toFixed(3));
+			maxReturn = Math.max(maxReturn, currentReturn);
 		}
 	});
 	const finalMoney = totalMoney + totalField * endValue;
@@ -450,7 +459,8 @@ const recon = (
 			costValue,
 			((endValue - costValue) / costValue).toFixed(3),
 			maxLost.toFixed(3),
-			totalProfit
+			totalProfit,
+			-maxReturn
 		);
 	showLog && console.log('profit: ', profit, totalProfit);
 	showLog &&
@@ -474,6 +484,7 @@ const recon = (
 		progress,
 		costValue,
 		lastBuyDate,
+		maxReturn
 	];
 };
 
