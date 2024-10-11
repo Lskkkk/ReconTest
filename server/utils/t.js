@@ -1,3 +1,5 @@
+
+
 const reconT = (valueList) => {
     let startMoney = 10000, field = 0, currentValue = 1;
     let firstValue = 0, leftMoney = 0;
@@ -6,7 +8,7 @@ const reconT = (valueList) => {
             firstValue = valueObj.value;
         }
         currentValue = Number((valueObj.value / firstValue).toFixed(2));
-        console.log('from:', field, '*', currentValue, '=', field * currentValue);
+        console.log('from:', field, '*', currentValue, '=', field * currentValue, '+', leftMoney);
         if (!field) {
             // first buy
             field = Math.floor(startMoney / currentValue);
@@ -17,16 +19,18 @@ const reconT = (valueList) => {
                 const saleMoney = (currentValue * field - startMoney);
                 field -= Math.floor(saleMoney / currentValue);
                 leftMoney += saleMoney;
-            } else if (currentValue * field / startMoney <= 0.9) {
+            } else if (currentValue * field / startMoney <= 0.95) {
                 // buy
-                const buyMoney = (startMoney - currentValue * field);
+                // const buyMoney = (startMoney - currentValue * field);
+                const buyMoney = leftMoney;
                 if (leftMoney >= buyMoney) {
                     field += Math.floor(buyMoney / currentValue);
                     leftMoney -= buyMoney;
                 }
             }
         }
-        console.log('-> to:', field, '*', currentValue, '=', field * currentValue, '+', leftMoney);
+        console.log('->to:', field, '*', currentValue, '=', field * currentValue, '+', leftMoney);
+        console.log('-------------------------------------------------------------');
     });
     console.log('end:', field, '*', currentValue, '=', field * currentValue + leftMoney, 'rate:', (field * currentValue + leftMoney) / startMoney - 1);
     console.log('original:', valueList[valueList.length - 1].value / firstValue * startMoney, (valueList[valueList.length - 1].value / firstValue * startMoney) / startMoney - 1);
@@ -43,19 +47,19 @@ for (let p = 3000; p <= 4500; p += 100) {
         date: '1'
     });
 }
-reconT(testValueList);
+// reconT(testValueList);
 // 单边上涨，3000-6000，不做T收益率 100%，减浮盈收益率 72%
 // 单边上涨，3000-4500，不做T收益率 50%，减浮盈收益率 42%
 
 // wave
 testValueList = [];
-for (let p = 3000; p <= 4900; p += p % 200 != 0 ? -300 : 500) {
+for (let p = 3000; p <= 6400; p += p % 200 != 0 ? -300 : 500) {
     testValueList.push({
         value: p,
         date: '1'
     });
 }
 console.log(testValueList);
-// reconT(testValueList);
-// 震荡行情，3000-6000，不做T收益率 100%，减浮盈收益率 73%
-// 震荡行情，3000-4600，不做T收益率 53%，减浮盈收益率 46%
+reconT(testValueList);
+// 震荡行情，3000-6000，不做T收益率 100%，做T收益率 187%
+// 震荡行情，3000-4600，不做T收益率 53%，做T收益率 85%
