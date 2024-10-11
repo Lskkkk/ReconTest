@@ -21,9 +21,9 @@ const reconT = (valueList) => {
                 leftMoney += saleMoney;
             } else if (currentValue * field / startMoney <= 0.95) {
                 // buy
-                // const buyMoney = (startMoney - currentValue * field);
-                const buyMoney = leftMoney;
-                if (leftMoney >= buyMoney) {
+                const buyMoney = (startMoney - currentValue * field);
+                // const buyMoney = leftMoney;
+                if (leftMoney >= buyMoney && leftMoney > 0) {
                     field += Math.floor(buyMoney / currentValue);
                     leftMoney -= buyMoney;
                 }
