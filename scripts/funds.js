@@ -60,7 +60,7 @@ const readFunds = async () => {
             }
         });
     };
-    console.log('finish readFunds');
+    console.log('finish readFunds', funds);
 }
 const saveFunds = () => {
     setGuiCache(

@@ -8,7 +8,7 @@
     "cacheHandler": "node ./server/utils/cacheHandler.js",
     "fileDownloader": "node ./server/utils/fileDownloader.js",
     "data": "npm run fileDownloader && npm run cacheHandler",
-    "start": "node ./server/utils/openHtml.js && nodemon ./server/index.js",
+    "start": "npm run cacheHandler && node ./server/utils/openHtml.js && nodemon ./server/index.js",
     "save": "git add .; git commit -m 'save'; git push"
   },
   "author": "",

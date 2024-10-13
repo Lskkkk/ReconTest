@@ -1,196 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<script src="../resource/jquery.js"></script>
-		<script src="../resource/echarts.min.js"></script>
-		<script src="../scripts/funds.js"></script>
-		<title>Charts</title>
-	</head>
 
-	<body>
-		<div id="main" style="width: 80%; height: 50%; min-height: 500px"></div>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<script src="../resource/jquery.js"></script>
+	<script src="../resource/echarts.min.js"></script>
+	<script src="../scripts/funds.js"></script>
+	<title>Charts</title>
+</head>
 
-		<script type="text/javascript">
-			const compareDate = (a, b) => {
-				const aSum = a.split('-').join('');
-				const bSum = b.split('-').join('');
-				return Number(aSum) >= Number(bSum);
-			};
-			const similarDate = (a, b) => {
-				const aList = a.split('-');
-				const bList = b.split('-');
-				return (
-					aList[0] == bList[0] &&
-					aList[1] == bList[1] &&
-					Math.abs(aList[2] - bList[2]) <= 10
-				);
-			};
-			const initDom = async () => {
-				const allFunds = {};
-				const allValues = await Promise.all(
-					Object.keys(funds).map(id => {
-						let apiUrl = `http://localhost:3000/getFund?id=${id}`;
-						return fetch(apiUrl)
-							.then(response => response.text())
-							.then(data => {
-								const values = JSON.parse(data);
-								allFunds[id] = values;
-							});
-					})
-				);
-				console.log('allFunds', allFunds);
+<body>
+	<div id="main" style="width: 80%; height: 50%; min-height: 500px"></div>
 
-				const mainChart = echarts.init(document.getElementById('main'));
-				const formatDay = day =>
-					`${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
-
-				const startDay = '2015-08-31';
-				const showRate = true;
-				const showAll = false; // 展示包括ETF
-				const recountAllFunds = {};
-
-				Object.keys(allFunds).map(id => {
-					const values = allFunds[id].filter(obj => compareDate(obj.date, startDay));
-					if (values.length == 0) return [];
-					if (showRate) {
-						const firstValue = values[0];
-						const recountValues = values.map(obj => ({
-							date: obj.date,
-							value: Number((obj.value / firstValue.value).toFixed(4)),
-						}));
-						recountAllFunds[id] = recountValues;
-					} else {
-						recountAllFunds[id] = values;
-					}
-				});
-				console.log('recountAllFunds', recountAllFunds);
-
-				const series = Object.keys(recountAllFunds)
-					.map(id => {
-						return {
-							name: funds[id].name,
-							type: 'line',
-							showSymbol: false,
-							data: recountAllFunds[id].map(obj => {
-								return [obj.date, obj.value];
-							}),
-						};
-					})
-					.filter(obj => obj.name.includes('收益') || showAll);
-				console.log(series);
-				const avg = {
-					name: 'AVG',
-					type: 'line',
-					showSymbol: false,
-					data: [],
-				};
-				const defaultSelectedLegends = {
-					AVG: true,
-				};
-				if (showRate) {
-					const fundsNames = ['中证A50全收益指数', '中证东方红红利低波动全收益指数'];
-					let startValue = 0;
-					recountAllFunds[fundsNames[0]]
-						.filter(obj => compareDate(obj.date, startDay))
-						.forEach(obj => {
-							const allValues = fundsNames
-								.map(
-									fundName =>
-										(
-											recountAllFunds[fundName].find(
-												f => f.date == obj.date
-											) || { value: 0 }
-										).value
-								)
-								.filter(v => v > 0);
-							const currentValue = Number(
-								(
-									allValues.reduce((s, pv) => (s += pv), 0) / allValues.length
-								).toFixed(4)
-							);
-							if (!startValue) {
-								startValue = currentValue;
-							}
-							avg.data.push([
-								obj.date,
-								Number((currentValue / startValue).toFixed(4)),
-							]);
+	<script type="text/javascript">
+		const compareDate = (a, b) => {
+			const aSum = a.split('-').join('');
+			const bSum = b.split('-').join('');
+			return Number(aSum) >= Number(bSum);
+		};
+		const similarDate = (a, b) => {
+			const aList = a.split('-');
+			const bList = b.split('-');
+			return (
+				aList[0] == bList[0] &&
+				aList[1] == bList[1] &&
+				Math.abs(aList[2] - bList[2]) <= 10
+			);
+		};
+		const initDom = async () => {
+			const allFunds = {};
+			const allValues = await Promise.all(
+				Object.keys(funds).map(id => {
+					let apiUrl = `http://localhost:3000/getFund?id=${id}`;
+					return fetch(apiUrl)
+						.then(response => response.text())
+						.then(data => {
+							const values = JSON.parse(data);
+							allFunds[id] = values;
 						});
-					series.push(avg);
-					if (fundsNames.length != 0) {
-						Object.keys(recountAllFunds).forEach(
-							fundName => (defaultSelectedLegends[fundName] = false)
-						);
-						Object.keys(funds).forEach(
-							id => (defaultSelectedLegends[funds[id].name] = false)
-						);
-						fundsNames.forEach(fundName => (defaultSelectedLegends[fundName] = true));
-					}
+				})
+			);
+			console.log('allFunds', allFunds);
+
+			const mainChart = echarts.init(document.getElementById('main'));
+			const formatDay = day =>
+				`${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
+
+			const startDay = '2014-12-31';
+			const showRate = true;
+			const showAll = false; // 展示包括ETF
+			const recountAllFunds = {};
+
+			Object.keys(allFunds).map(id => {
+				const values = allFunds[id].filter(obj => compareDate(obj.date, startDay));
+				if (values.length == 0) return [];
+				if (showRate) {
+					const firstValue = values[0];
+					const recountValues = values.map(obj => ({
+						date: obj.date,
+						value: Number((obj.value / firstValue.value).toFixed(4)),
+					}));
+					recountAllFunds[id] = recountValues;
+				} else {
+					recountAllFunds[id] = values;
 				}
+			});
+			console.log('recountAllFunds', recountAllFunds);
 
-				const option = {
-					title: {
-						// text: '净值百分比',
-					},
-					tooltip: {
-						trigger: 'axis',
-					},
-					legend: {
-						data: Object.values(funds)
-							.map(fund => fund.name)
-							.filter(name => name.includes('收益') || showAll)
-							.concat(['AVG']),
-						selected: defaultSelectedLegends,
-					},
-					grid: {
-						top: '3%',
-						left: '3%',
-						right: '4%',
-						bottom: '3%',
-						containLabel: true,
-					},
-					toolbox: {
-						feature: {
-							saveAsImage: {},
-						},
-					},
-					xAxis: {
-						type: 'time',
-						splitLine: {
-							show: false,
-						},
-						// interval: 3600 * 1000 * 24 * 7,
-					},
-					yAxis: {
-						type: 'value',
-						boundaryGap: [0, '100%'],
-						splitLine: {
-							show: false,
-						},
-					},
-					dataZoom: [
-						{
-							type: 'slider', // 使用滑块类型
-							start: 0, // 初始化滑块开始位置（百分比）
-							end: 100, // 初始化滑块结束位置（百分比）
-							handleSize: '80%', // 滑块手柄的大小
-							handleStyle: {
-								color: '#000',
-								shadowBlur: 3,
-								shadowColor: 'rgba(0, 0, 0, 0.6)',
-								shadowOffsetX: 2,
-								shadowOffsetY: 2,
-							},
-						},
-					],
-					series,
-				};
-				mainChart.setOption(option);
+			const series = Object.keys(recountAllFunds)
+				.map(id => {
+					return {
+						name: funds[id].name,
+						type: 'line',
+						showSymbol: false,
+						data: recountAllFunds[id].map(obj => {
+							return [obj.date, obj.value];
+						}),
+					};
+				})
+				.filter(obj => obj.name.includes('收益') || showAll);
+			console.log(series);
+			const avg = {
+				name: 'AVG',
+				type: 'line',
+				showSymbol: false,
+				data: [],
 			};
+			const defaultSelectedLegends = {
+				AVG: true,
+			};
+			if (showRate) {
+				const fundsNames = ['中证A50全收益指数', '中证东方红红利低波动全收益指数'];
+				let startValue = 0;
+				recountAllFunds[fundsNames[0]]
+					.filter(obj => compareDate(obj.date, startDay))
+					.forEach(obj => {
+						const allValues = fundsNames
+							.map(
+								fundName =>
+									(
+										recountAllFunds[fundName].find(
+											f => f.date == obj.date
+										) || { value: 0 }
+									).value
+							)
+							.filter(v => v > 0);
+						const currentValue = Number(
+							(
+								allValues.reduce((s, pv) => (s += pv), 0) / allValues.length
+							).toFixed(4)
+						);
+						if (!startValue) {
+							startValue = currentValue;
+						}
+						avg.data.push([
+							obj.date,
+							Number((currentValue / startValue).toFixed(4)),
+						]);
+					});
+				series.push(avg);
+				if (fundsNames.length != 0) {
+					Object.keys(recountAllFunds).forEach(
+						fundName => (defaultSelectedLegends[fundName] = false)
+					);
+					Object.keys(funds).forEach(
+						id => (defaultSelectedLegends[funds[id].name] = false)
+					);
+					fundsNames.forEach(fundName => (defaultSelectedLegends[fundName] = true));
+				}
+			}
 
-			setTimeout(initDom, 500);
-		</script>
-	</body>
+			const option = {
+				title: {
+					// text: '净值百分比',
+				},
+				tooltip: {
+					trigger: 'axis',
+				},
+				legend: {
+					data: Object.values(funds)
+						.map(fund => fund.name)
+						.filter(name => name.includes('收益') || showAll)
+						.concat(['AVG']),
+					selected: defaultSelectedLegends,
+				},
+				grid: {
+					top: '3%',
+					left: '3%',
+					right: '4%',
+					bottom: '3%',
+					containLabel: true,
+				},
+				toolbox: {
+					feature: {
+						saveAsImage: {},
+					},
+				},
+				xAxis: {
+					type: 'time',
+					splitLine: {
+						show: false,
+					},
+					// interval: 3600 * 1000 * 24 * 7,
+				},
+				yAxis: {
+					type: 'value',
+					boundaryGap: [0, '100%'],
+					splitLine: {
+						show: false,
+					},
+				},
+				dataZoom: [
+					{
+						type: 'slider', // 使用滑块类型
+						start: 0, // 初始化滑块开始位置（百分比）
+						end: 100, // 初始化滑块结束位置（百分比）
+						handleSize: '80%', // 滑块手柄的大小
+						handleStyle: {
+							color: '#000',
+							shadowBlur: 3,
+							shadowColor: 'rgba(0, 0, 0, 0.6)',
+							shadowOffsetX: 2,
+							shadowOffsetY: 2,
+						},
+					},
+				],
+				series,
+			};
+			mainChart.setOption(option);
+		};
+
+		setTimeout(initDom, 500);
+	</script>
+</body>
+
 </html>
