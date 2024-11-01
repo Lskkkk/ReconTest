@@ -19,6 +19,22 @@ const links = [
 	{
 		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=000300',
 		matchName: '300收益'
+	},
+	{
+		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=931069',
+		matchName: '中金300全收益'
+	},
+	{
+		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=931052',
+		matchName: '国信价值全收益'
+	},
+	{
+		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=000922',
+		matchName: '中红收益'
+	},
+	{
+		url: 'https://www.csindex.com.cn/#/indices/family/detail?indexCode=H30269',
+		matchName: '红利低波全收益'
 	}
 ];
 
@@ -159,7 +175,7 @@ const renameDownloadedFiles = async () => {
 	const excelPath = path.join(__dirname, '../cache/excelFiles');
 	const files = fs.readdirSync(downloadPath);
 	files.forEach(fileName => {
-		const fundId = fileName.match(/^(\d+)perf.*/)[1];
+		const fundId = fileName.match(/^(H?\d+)perf.*/)[1];
 		const dateNow = formatDate(new Date());
 		const newFileName = fundId + '+' + dateNow + '.xlsx';
 		const originPath = downloadPath + '/' + fileName;

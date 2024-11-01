@@ -47,7 +47,7 @@
 			const formatDay = day =>
 				`${day.substring(0, 4)}-${day.substring(4, 6)}-${day.substring(6, 8)}`;
 
-			const startDay = '2014-12-31';
+			const startDay = '2019-12-31';
 			const showRate = true;
 			const showAll = false; // 展示包括ETF
 			const recountAllFunds = {};
@@ -91,7 +91,7 @@
 				AVG: true,
 			};
 			if (showRate) {
-				const fundsNames = ['中证A50全收益指数', '中证东方红红利低波动全收益指数', '中证东方红红利低波动全收益指数'];
+				const fundsNames = ['中证东方红红利低波动全收益指数', '中证红利低波动全收益指数', '中证红利全收益指数', '中证中金优选300全收益指数', '中证国信价值全收益指数'];
 				let startValue = 0;
 				recountAllFunds[fundsNames[0]]
 					.filter(obj => compareDate(obj.date, startDay))
